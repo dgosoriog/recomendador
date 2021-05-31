@@ -10,3 +10,8 @@ def index():
  #form=form, name=session.get('name'),
  #known=session.get('known', False),
  #current_time=datetime.utcnow())
+@main.route('/login')
+def login():
+ #return redirect(url_for('.index'))
+ #si utilizo este return en otra ruta, añadir 'main' asi: url_for('main.index')
+ return render_template('login.html')
