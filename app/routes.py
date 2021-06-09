@@ -44,6 +44,9 @@ def logout():
     return redirect(url_for('login'))
 
 admin.add_view(UserAdmin(Usuario, db.session))
+@app.route("/recomendacion")
+def recomendacion():
+    return render_template('recomendacion.html')
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, Usuario, Rol)
