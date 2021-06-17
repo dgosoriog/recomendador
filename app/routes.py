@@ -3,39 +3,72 @@ from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
 
 from app import app, db, admin
-from app.forms import LoginForm
+from app.forms import LoginForm,MedicionForm
 from app.admin import UserAdmin
-from app.models import Usuario, Rol
+from app.models import Usuario, Rol, Medicion
+
+import keras
+from tensorflow.keras import backend as K
+from keras.models import Sequential
+from keras.models import load_model
 
 #main = Blueprint('main', __name__)
+def get_model():
+    global model
+    model = load_model('recomendador.h5')
+    print('*Modelo cargado!')
+
+#get_model()
+
+def guardar_medicion(ph,densidad,cond_elec,fecha):
+    medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
+                        fecha=fecha)
+    db.session.add(medicion)
+    db.session.commit()
+    return True
 
 @app.route('/')
 def index():
- return render_template('index.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return render_template('index.html')
 
-@app.route("/home")
+@app.route('/home')
 @login_required
 def home():
-    return render_template('home.html')
+ return render_template('home.html')
+
+@app.route("/predict", methods=['GET', 'POST'])
+@login_required
+def predict():
+    form = MedicionForm()
+    if form.validate_on_submit():
+        ph = form.ph.data
+        densidad = form.densidad.data
+        cond_elec = form.cond_elect.data
+        fecha = form.fecha.data
+        guardar_medicion(ph,densidad,cond_elec,fecha)
+        return redirect(url_for('recomendacion'))
+
+    return render_template('ingreso_datos.html',form=form)
 
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            user = Usuario.query.filter_by(email=form.email.data).first()
-            if user and utils.verify_password(form.password.data,user.password):
-                login_user(user, remember=form.remember.data)
-                #next_page = request.args.get('next')
-                if user.has_role('admin'):
-                    return redirect(url_for('admin.home_admin'))
-                elif user.has_role('tecnico'):
-                    return redirect(url_for('home'))
+    if form.validate_on_submit():
+        user = Usuario.query.filter_by(email=form.email.data).first()
+        if user and utils.verify_password(form.password.data,user.password):
+            login_user(user, remember=form.remember.data)
+            #next_page = request.args.get('next')
+            if user.has_role('admin'):
+                return redirect(url_for('admin.home_admin'))
+            elif user.has_role('tecnico'):
+                return redirect(url_for('home'))
                 #return redirect(next_page) if next_page else redirect(url_for('home'))
-            else:
-                flash('Error al acceder. Por favor verifique su email y/o contraseña', 'danger')
+        else:
+            flash('Error al acceder. Por favor verifique su email y/o contraseña', 'danger')
     return render_template('login.html', form=form)
 
 @app.route("/logout")
@@ -86,15 +119,3 @@ def before_first_request():
     user_datastore.add_role_to_user('tecnico@example.com', 'tecnico')
     user_datastore.add_role_to_user('admin@example.com', 'admin')
     db.session.commit()
-# db.create_all()
-# db.session.commit()
-# admin=Tipous(tipo_us='admin')
-# tecnico=Tipous(tipo_us='tecnico')
-# db.session.add(admin)
-# db.session.add(tecnico)
-# db.session.commit()
-# user1 = Usuario(usuario='admin', email='admin@example.com',_password='admin',tipo_id=1)
-# user2 = Usuario(usuario='tecnico', email='tecnico@demo.com',_password='tecnico',tipo_id=2)
-# db.session.add(user1)
-# db.session.add(user2)
-# db.session.commit()
