@@ -1,9 +1,10 @@
 from datetime import date
-from app import db,bcrypt
+from app import db, bcrypt, app
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, \
     UserMixin, RoleMixin, login_required
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 # Define models
 roles_usuarios = db.Table('roles_usuarios',
@@ -25,6 +26,19 @@ class Usuario(db.Model, UserMixin):
     active = db.Column(db.Boolean())
     roles = db.relationship('Rol', secondary=roles_usuarios,
                             backref=db.backref('usuarios', lazy='dynamic'))
+
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(app.config['SECRET_KEY'], expires_sec)
+        return s.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return Usuario.query.get(user_id)
 
 class Medicion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
