@@ -3,10 +3,15 @@ from flask import render_template, url_for, flash, redirect, request
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
 
-from app import app, db, admin
-from app.forms import LoginForm,MedicionForm
+from app import app, db, admin, bcrypt, mail
+from app.forms import LoginForm,MedicionForm,RequestResetForm, ResetPasswordForm
 from app.admin import UserAdmin
+
 from app.models import Usuario, Rol, Medicion,Recomendacion
+
+from app.models import Usuario, Rol, Medicion
+from flask_mail import Message
+
 
 import keras
 import numpy as np
@@ -20,7 +25,7 @@ from numpy import array
 
 
 #main = Blueprint('main', __name__)
-cont=0
+
 def get_model():
     global model
     model = load_model('recomendador.h5')
@@ -183,6 +188,47 @@ def recomendacion():
         print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
         recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
     return render_template('recomendacion.html',r=recomen)
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Solicitud para reestablecer contraseña',
+                  sender='oso95d@gmail.com',
+                  recipients=[user.email])
+    msg.body = f'''Para reestablecer tu contraseña, visita el siguiente link:
+{url_for('reset_token', token=token, _external=True)}
+Si no hiciste esta solicitud simplemente ignora este correo y no se hará ningún cambio.
+'''
+    mail.send(msg)
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = Usuario.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('Se ha enviado un email con instrucciones para reestablecer su contraseña.', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', form=form)
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = Usuario.verify_reset_token(token)
+    if user is None:
+        flash('El token es inválido o ha expirado', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash('Su contraseña ha sido cambiada! Ahora puede iniciar sesión', 'success')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
+
 
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, Usuario, Rol)
