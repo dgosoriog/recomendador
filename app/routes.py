@@ -9,11 +9,18 @@ from app.models import Usuario, Rol, Medicion, Recomendacion
 from flask_mail import Message
 
 import keras
+import numpy as np
+import pandas as pd
+from keras.models import model_from_json
+import os
 from tensorflow.keras import backend as K
 from keras.models import Sequential
 from keras.models import load_model
+from numpy import array
+
 
 #main = Blueprint('main', __name__)
+cont=0
 def get_model():
     global model
     model = load_model('recomendador.h5')
@@ -42,6 +49,7 @@ def home():
 @app.route("/predict", methods=['GET', 'POST'])
 @login_required
 def predict():
+    recomen = ""
     form = MedicionForm()
     if form.validate_on_submit():
         ph = form.ph.data
