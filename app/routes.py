@@ -1,4 +1,3 @@
-
 from flask import render_template, url_for, flash, redirect, request
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
@@ -6,26 +5,15 @@ from flask_security import SQLAlchemyUserDatastore, Security, utils
 from app import app, db, admin, bcrypt, mail
 from app.forms import LoginForm,MedicionForm,RequestResetForm, ResetPasswordForm
 from app.admin import UserAdmin
-
-from app.models import Usuario, Rol, Medicion,Recomendacion
-
-from app.models import Usuario, Rol, Medicion
+from app.models import Usuario, Rol, Medicion, Recomendacion
 from flask_mail import Message
 
-
 import keras
-import numpy as np
-import pandas as pd
-from keras.models import model_from_json
-import os
 from tensorflow.keras import backend as K
 from keras.models import Sequential
 from keras.models import load_model
-from numpy import array
-
 
 #main = Blueprint('main', __name__)
-
 def get_model():
     global model
     model = load_model('recomendador.h5')
@@ -40,11 +28,11 @@ def guardar_medicion(ph,densidad,cond_elec,fecha):
     db.session.commit()
     return True
 
-# @app.route('/')
-# def index():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('home'))
-#     return render_template('index.html')
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return render_template('index.html')
 
 @app.route('/home')
 @login_required
@@ -54,7 +42,6 @@ def home():
 @app.route("/predict", methods=['GET', 'POST'])
 @login_required
 def predict():
-    recomen = ""
     form = MedicionForm()
     if form.validate_on_submit():
         ph = form.ph.data
@@ -62,12 +49,11 @@ def predict():
         cond_elec = form.cond_elect.data
         fecha = form.fecha.data
         guardar_medicion(ph,densidad,cond_elec,fecha)
-
         return redirect(url_for('recomendacion'))
 
     return render_template('ingreso_datos.html',form=form)
 
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -92,102 +78,9 @@ def logout():
     return redirect(url_for('login'))
 
 admin.add_view(UserAdmin(Usuario, db.session))
-
-
 @app.route("/recomendacion")
 def recomendacion():
-
-    ph=db.session.query(Medicion.ph).all();
-    ph= pd.DataFrame(ph, columns = ['Name'])
-    datosph=ph.values.astype('float32')
-    den=db.session.query(Medicion.densidad).all();
-    den=pd.DataFrame(den, columns = ['Name'])
-    datosden = den.values.astype('float32')
-    CE=db.session.query(Medicion.cond_elec).all();
-    CE=pd.DataFrame(CE, columns = ['Name'])
-    datosce = CE.values.astype('float32')
-
-
-    # df = pd.read_csv("C:/Users/Amanda/Downloads/Tesis_Zambrano_Meza-main/conjunto_datos/datos_clasificados.csv",
-    #                  names=["dia", "CE", "PH", "D", "C"])
-    # df_nan = df[df.isna().any(axis=1)]
-    # df['C'] = df['C'].replace(np.nan, 0)
-    # df_nan = df[df.isna().any(axis=1)]
-    # datos = df.values.astype('float32')
-    # cargar json y crear el modelo
-    json_file = open("app/static/modelo/model.json", 'r')
-    loaded_model_json = json_file.read()
-    json_file.close()
-    loaded_model = model_from_json(loaded_model_json)
-    # cargar pesos al nuevo modelo
-    loaded_model.load_weights("app/static/modelo/recomendador.h5")
-    print("Cargado modelo desde disco.")
-
-    # Compilar modelo cargado y listo para usar.
-    loaded_model.compile(loss='mean_squared_error', optimizer='adam', metrics=['binary_accuracy'])
-    suma_CE = 0;
-    suma_PH = 0;
-    suma_D = 0;
-
-    #training_data = np.empty(shape=[0, 3])
-    #target_data = np.empty(shape=[0])
-    #print("se7", sum(list(map(float,ph))));
-    #print("xd",ph);
-
-    if (len(ph)<=10):
-        a = 0
-        b = 10
-        #print("entro aqui")
-        for j in range(a, b):
-            suma_CE = suma_CE + datosce[j];
-            suma_PH = suma_PH + datosph[j];
-            suma_D = suma_D + datosden[j];
-
-    a = 0
-    b = 10
-
-    if (len(ph)>10):
-        b=len(ph)-1
-        a=len(ph)-10
-        #print("entro aca")
-        for j in range(a, b):
-            suma_CE = suma_CE + datosce[j];
-            suma_PH = suma_PH + datosph[j];
-            suma_D = suma_D + datosden[j];
-        print("Datos de ", a, " hasta ", b);
-
-    #print("Datos de ", a, " hasta ", b);
-    pro_CE = float(suma_CE / 10);
-
-    pro_PH = float(suma_PH / 10);
-    # print(pro_PH);
-    pro_D =float( suma_D / 10);
-    # print(pro_D);
-
-    suma_CE = 0;
-    suma_PH = 0;
-    suma_D = 0;
-    c = array([[pro_CE, pro_PH, pro_D]])
-    print(c)
-    pre = loaded_model.predict(c)
-    result = pre[0]
-    print(result)
-    answer = np.argmax(result)
-    print(answer)
-
-    if answer == 1:
-        print("Se Recomienda: Incorporar Composto o Cambio de lugar")
-        recomen = "Incorporar Composto o Cambio de lugar"
-    elif answer == 2:
-        print("Se Recomienda: Drenchado,Trinchar camas o Levantar camas")
-        recomen = "Drenchado,Trinchar camas o Levantar camas"
-    elif answer == 3:
-        print("Se Recomienda: Aplicar sulfato de calcio o Aplicar nitrato de calcio")
-        recomen = "Aplicar sulfato de calcio o Aplicar nitrato de calcio"
-    elif answer == 4:
-        print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
-        recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
-    return render_template('recomendacion.html',r=recomen)
+    return render_template('recomendacion.html')
 
 def send_reset_email(user):
     token = user.get_reset_token()
@@ -268,3 +161,19 @@ def before_first_request():
     user_datastore.add_role_to_user('tecnico@example.com', 'tecnico')
     user_datastore.add_role_to_user('admin@example.com', 'admin')
     db.session.commit()
+
+@app.route('/historial', methods=['GET', 'POST'])
+@login_required
+def buscar_recomendaciones():
+    recs=[]
+    fecha_inicio = request.args.get('desde')
+    fecha_fin = request.args.get('hasta')
+    print('fecha inicio',fecha_inicio)
+    if fecha_inicio and fecha_fin:
+        if fecha_inicio>fecha_fin:
+            flash('La fecha de inicio no puede ser mayor a la fecha fin', 'warning')
+        else:
+            recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,Medicion.fecha>=fecha_inicio).all()
+        print(recs)
+        #recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
+    return render_template('historial.html',recs=recs)
