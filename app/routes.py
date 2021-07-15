@@ -1,26 +1,19 @@
-
 from flask import render_template, url_for, flash, redirect, request
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
 
-from app import app, db, admin
-from app.forms import LoginForm,MedicionForm
+from app import app, db, admin, bcrypt, mail
+from app.forms import LoginForm,MedicionForm,RequestResetForm, ResetPasswordForm
 from app.admin import UserAdmin
-from app.models import Usuario, Rol, Medicion,Recomendacion
+from app.models import Usuario, Rol, Medicion, Recomendacion
+from flask_mail import Message
 
 import keras
-import numpy as np
-import pandas as pd
-from keras.models import model_from_json
-import os
 from tensorflow.keras import backend as K
 from keras.models import Sequential
 from keras.models import load_model
-from numpy import array
-
 
 #main = Blueprint('main', __name__)
-cont=0
 def get_model():
     global model
     model = load_model('recomendador.h5')
@@ -49,7 +42,6 @@ def home():
 @app.route("/predict", methods=['GET', 'POST'])
 @login_required
 def predict():
-    recomen = ""
     form = MedicionForm()
     if form.validate_on_submit():
         ph = form.ph.data
@@ -57,7 +49,6 @@ def predict():
         cond_elec = form.cond_elect.data
         fecha = form.fecha.data
         guardar_medicion(ph,densidad,cond_elec,fecha)
-
         return redirect(url_for('recomendacion'))
 
     return render_template('ingreso_datos.html',form=form)
@@ -87,8 +78,6 @@ def logout():
     return redirect(url_for('login'))
 
 admin.add_view(UserAdmin(Usuario, db.session))
-
-
 @app.route("/recomendacion")
 def recomendacion():
 
@@ -222,3 +211,19 @@ def before_first_request():
     user_datastore.add_role_to_user('tecnico@example.com', 'tecnico')
     user_datastore.add_role_to_user('admin@example.com', 'admin')
     db.session.commit()
+
+@app.route('/historial', methods=['GET', 'POST'])
+@login_required
+def buscar_recomendaciones():
+    recs=[]
+    fecha_inicio = request.args.get('desde')
+    fecha_fin = request.args.get('hasta')
+    print('fecha inicio',fecha_inicio)
+    if fecha_inicio and fecha_fin:
+        if fecha_inicio>fecha_fin:
+            flash('La fecha de inicio no puede ser mayor a la fecha fin', 'warning')
+        else:
+            recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,Medicion.fecha>=fecha_inicio).all()
+        print(recs)
+        #recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
+    return render_template('historial.html',recs=recs)
