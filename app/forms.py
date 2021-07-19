@@ -6,6 +6,7 @@ from datetime import date
 from app.models import Usuario
 
 
+
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Contraseña', validators=[DataRequired()])

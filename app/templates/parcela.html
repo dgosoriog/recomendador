@@ -50,140 +50,31 @@
                 </div>
             </div>
         </nav>
-        <!-- Page content-->
-        <div class="container-fluid">
-            <h1 class="mt-4" align="center">Ingreso de Datos</h1>
-            <p align="center">Ingrese aquí los datos de su parcela de cultivo</p>
-            <form align="center" method="POST" action="">
-                {{ form.hidden_tag() }}
-                <div align="center" class="form-group">
-                    {{ form.ph.label(class="form-control-label") }}
-                    {% if form.ph.errors %}
-                    {{ form.ph(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.ph.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
+      <form method="POST" action="{{url_for('procesar')}}">
+            <label>Ingrese Cantidad Arroz:</label><input name="arroz" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad arveja:</label><input name="arveja" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad garbanzo:</label><input name="garbanzo" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad lenteja:</label><input name="lenteja" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad pintando color:</label><input name="pcolor" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad rayando color:</label><input name="rcolor" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad color definido:</label><input name="colord" required type="number">
+            <br><br>
 
-                    <div align="center" class="col-sm-3">
-                        {{ form.ph(class="form-control form-control-md") }}
-                    </div>
-                     {% endif %}
-                </div><br>
-                <div align="center" class="form-group">
-                    {{ form.densidad.label(class="form-control-label") }}
-                    {% if form.densidad.errors %}
-                    {{ form.densidad(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.densidad.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
+            <input type="submit" value="Enviar">
+        </form>
 
-                    <div align="center" class="col-sm-3">
-                        {{ form.densidad(class="form-control form-control-md") }}
-                    </div>
-                     {% endif %}
-                </div><br>
-
-                <div align="center" class="form-group">
-                    {{ form.cond_elect.label(class="form-control-label") }}
-                    {% if form.cond_elect.errors %}
-                    {{ form.cond_elect(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.cond_elect.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-
-                    <div align="center" class="col-sm-3">
-                        {{ form.cond_elect(class="form-control form-control-md") }}
-                    </div>
-                     {% endif %}
-                </div><br>
-
-                <div align="center" class="form-group">
-                    {{ form.fecha.label(class="form-control-label") }}
-                    {% if form.fecha.errors %}
-                    {{ form.fecha(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.fecha.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-
-                    <div align="center" class="col-sm-3">
-                        {{ form.fecha(class="datepicker") }}
-                    </div>
-                     {% endif %}
-
-                    <div class="container">
-  <div class="row">
-    <div class="col">
-
-        <h4>Arroz</h4>
-                    {% for i in range (es1) %}
-                <input type="text" class="form-control" id="arroz" style="width : 80px; heigth : 1px">
-                {% endfor %}
     </div>
-    <div class="col">
-      <h4>Arveja</h4>
-                    {% for i in range(es2) %}
 
-                <input type="text" class="form-control" id="arveja" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-    <div class="col">
-      <h4>Garbanzo</h4>
-                    {% for i in range(es3) %}
 
-                <input type="text" class="form-control" id="garbanzo" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-      <div class="col">
-      <h4>Lenteja</h4>
-                    {% for i in range(es4) %}
 
-                <input type="text" class="form-control" id="lenteja" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-      <div class="col">
-      <h4>pintColor</h4>
-                    {% for i in range(es5) %}
-
-                <input type="text" class="form-control" id="pcolor" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-      <div class="col">
-      <h4>RayColor</h4>
-                    {% for i in range(es6) %}
-
-                <input type="text" class="form-control" id="rcolor" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-      <div class="col">
-      <h4>ColorDef</h4>
-                    {% for i in range(es7) %}
-
-                <input type="text" class="form-control" id="colord" style="width : 80px; heigth : 1px">
-                {% endfor %}
-    </div>
-  </div>
 </div>
 
-                </div><br>
-
-                <center>{{ form.cargar(class="btn btn-primary") }}</center>
-            </form>
-
-        </div>
-    </div>
-</div>
 <!-- Bootstrap core JS-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Core theme JS-->
