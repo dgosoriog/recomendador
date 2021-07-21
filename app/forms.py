@@ -18,6 +18,7 @@ class MedicionForm(FlaskForm):
     densidad = FloatField('Densidad', validators=[DataRequired()])
     cond_elect = FloatField('Conductividad Eléctrica',validators=[DataRequired()])
     fecha = DateField('Fecha', default=date.today(), validators=[DataRequired()])
+
     cargar = SubmitField('Cargar')
 
 class RequestResetForm(FlaskForm):

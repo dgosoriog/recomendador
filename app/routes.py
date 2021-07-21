@@ -30,9 +30,12 @@ def get_model():
 
 # get_model()
 
-def guardar_medicion(ph, densidad, cond_elec, fecha):
+def guardar_medicion(ph, densidad, cond_elec, fecha, Cant_arr, pro_arr, cant_arv, pro_arv, cant_gar, pro_gar, cant_len, cant_pintcolor, pro_pintcolor, cant_raycolor, pro_raycolor, cant_colordef, pro_colordef, pro_len):
     medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
-                        fecha=fecha)
+                        fecha=fecha, Cant_arro=Cant_arr, pro_arr=pro_arr, cant_arv=cant_arv,
+                        pro_arv=pro_arv, cant_gar=cant_gar, pro_gar=pro_gar, cant_len=cant_len,
+                        cant_pintcolor=cant_pintcolor, pro_pintcolor=pro_pintcolor,
+                        cant_raycolor=cant_raycolor, pro_raycolor=pro_raycolor, cant_colordef=cant_colordef, pro_colordef=pro_colordef,prolent=pro_len)
     db.session.add(medicion)
     db.session.commit()
     return True
@@ -82,20 +85,21 @@ def predict():
     rco = (int)(request.args.get("rc"))
     co = (int)(request.args.get("c"))
     form = MedicionForm()
+
     if form.validate_on_submit():
-        darroz = request.form.get("arroz")
-        darveja = request.form.get("arveja")
-        dgarbanzo = request.form.get("garbanzo")
-        dlenteja = request.form.get("lenteja")
-        dpcolor = request.form.get("pcolor")
-        drcolor = request.form.get("rcolor")
-        dcolord = request.form.get("colord")
-        print("hola",darroz)
+        p1 = request.form.get("pr1")
+        p2 = request.form.get("pr2")
+        p3 = request.form.get("pr3")
+        p4 = request.form.get("pr4")
+        p5 = request.form.get("pr5")
+        p6 = request.form.get("pr6")
+        p7 = request.form.get("pr7")
+
         ph = form.ph.data
         densidad = form.densidad.data
         cond_elec = form.cond_elect.data
         fecha = form.fecha.data
-        guardar_medicion(ph, densidad, cond_elec, fecha)
+        guardar_medicion(ph, densidad, cond_elec, fecha, ar, p1, arv, p2, ga, p3, len, pco, p5, rco, p6, co, p7, p4)
         return redirect(url_for('recomendacion'))
 
     return render_template('ingreso_datos.html', form=form,es1=ar,es2=arv,es3=ga,es4=len,es5=pco,es6=rco,es7=co)
@@ -130,8 +134,16 @@ def logout():
 admin.add_view(UserAdmin(Usuario, db.session))
 
 
-@app.route("/recomendacion")
+@app.route("/recomendacion",methods=['GET', 'POST'])
 def recomendacion():
+
+
+
+    dgarbanzo = request.args.get("d")
+    print("ddd", dgarbanzo)
+
+
+
     ph = db.session.query(Medicion.ph).all();
     ph = pd.DataFrame(ph, columns=['Name'])
     datosph = ph.values.astype('float32')
