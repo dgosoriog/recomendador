@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,22 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <meta name="description" content="" />
     <meta name="author" content="" />
-    <title>Home</title>
+    <title>Ingreso Datos</title>
     <!-- Favicon-->
     <link rel="icon" type="image/x-icon" href="static/assets/flor.png" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="static/css/styles2.css" rel="stylesheet" />
-
-
-
-    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700,800,900" rel="stylesheet">
-
-		<link rel="stylesheet" href="static/css/owl.carousel.min.css">
-    <link rel="stylesheet" href="static/css/owl.theme.default.min.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/4.5.6/css/ionicons.min.css">
-		<link rel="stylesheet" href="static/css/style3.css">
-
-
 </head>
 <body style="background-color:#4ED33F;">
 
@@ -31,7 +19,7 @@
         <div class="sidebar-heading border-bottom bg-light"><img align="center" src="static/images/hoja.png" width="70">
             <br>Asistente Floricola</div>
         <div class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/parcela"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bezier2" viewBox="0 0 16 16">
+            <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/predict"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bezier2" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M1 2.5A1.5 1.5 0 0 1 2.5 1h1A1.5 1.5 0 0 1 5 2.5h4.134a1 1 0 1 1 0 1h-2.01c.18.18.34.381.484.605.638.992.892 2.354.892 3.895 0 1.993.257 3.092.713 3.7.356.476.895.721 1.787.784A1.5 1.5 0 0 1 12.5 11h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5H6.866a1 1 0 1 1 0-1h1.711a2.839 2.839 0 0 1-.165-.2C7.743 11.407 7.5 10.007 7.5 8c0-1.46-.246-2.597-.733-3.355-.39-.605-.952-1-1.767-1.112A1.5 1.5 0 0 1 3.5 5h-1A1.5 1.5 0 0 1 1 3.5v-1zM2.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1zm10 10a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1z"/>
             </svg>   Ingreso de datos</a>
             <a class="list-group-item list-group-item-action list-group-item-light p-3" href="/historial"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
@@ -62,72 +50,34 @@
                 </div>
             </div>
         </nav>
-        <!-- Page content-->
-        <div class="container-fluid">
+      <form method="POST" action="{{url_for('procesar')}}">
+            <label>Ingrese Cantidad Arroz:</label><input name="arroz" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad arveja:</label><input name="arveja" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad garbanzo:</label><input name="garbanzo" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad lenteja:</label><input name="lenteja" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad pintando color:</label><input name="pcolor" required type="number">
+            <br><br>
+            <label>Ingrese Cantidad rayando color:</label><input name="rcolor" required type="number">
+            <br><br>
+          <label>Ingrese Cantidad color definido:</label><input name="colord" required type="number">
+            <br><br>
 
+            <input type="submit" value="Enviar">
+        </form>
 
-            <div class="home-slider owl-carousel js-fullheight">
-      <div class="slider-item js-fullheight" style="background-image:url(static/images/flo1.jpg);">
-      	<div class="overlay"></div>
-        <div class="container">
-          <div class="row no-gutters slider-text js-fullheight align-items-center justify-content-center">
-	          <div class="col-md-12 ftco-animate">
-	          	<div class="text w-100 text-center">
-		            <h1 class="mb-3">BIENVENIDO</h1>
-	            </div>
-	          </div>
-	        </div>
-        </div>
-      </div>
-
-      <div class="slider-item js-fullheight" style="background-image:url(static/images/flo2.jpeg);">
-      	<div class="overlay"></div>
-        <div class="container">
-          <div class="row no-gutters slider-text js-fullheight align-items-center justify-content-center">
-	          <div class="col-md-12 ftco-animate">
-	          	<div class="text w-100 text-center">
-
-		            <h1 class="mb-3">BIENVENIDO</h1>
-	            </div>
-	          </div>
-	        </div>
-        </div>
-      </div>
-
-      <div class="slider-item js-fullheight" style="background-image:url(static/images/flo3.jpg);">
-      	<div class="overlay"></div>
-        <div class="container">
-          <div class="row no-gutters slider-text js-fullheight align-items-center justify-content-center">
-	          <div class="col-md-12 ftco-animate">
-	          	<div class="text w-100 text-center">
-
-		            <h1 class="mb-3">BIENVENIDO</h1>
-	            </div>
-	          </div>
-	        </div>
-        </div>
-      </div>
     </div>
 
 
 
-        </div>
-    </div>
 </div>
-
-
 
 <!-- Bootstrap core JS-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Core theme JS-->
 <script src="static/js/scripts2.js"></script>
-
-
-    <script src="static/js/jquery.min.js"></script>
-    <script src="static/js/popper.js"></script>
-    <script src="static/js/bootstrap.min.js"></script>
-    <script src="static/js/owl.carousel.min.js"></script>
-    <script src="static/js/main3.js"></script>
-
 </body>
 </html>

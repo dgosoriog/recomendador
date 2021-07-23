@@ -3,7 +3,7 @@ from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
 
 from app import app, db, admin, bcrypt, mail
-from app.forms import LoginForm,MedicionForm,RequestResetForm, ResetPasswordForm
+from app.forms import LoginForm, MedicionForm, RequestResetForm, ResetPasswordForm
 from app.admin import UserAdmin
 from app.models import Usuario, Rol, Medicion, Recomendacion
 from flask_mail import Message
@@ -18,22 +18,28 @@ from keras.models import Sequential
 from keras.models import load_model
 from numpy import array
 
+# main = Blueprint('main', __name__)
+cont = 0
 
-#main = Blueprint('main', __name__)
-cont=0
+
 def get_model():
     global model
     model = load_model('recomendador.h5')
     print('*Modelo cargado!')
 
-#get_model()
 
-def guardar_medicion(ph,densidad,cond_elec,fecha):
+# get_model()
+
+def guardar_medicion(ph, densidad, cond_elec, fecha, Cant_arr, pro_arr, cant_arv, pro_arv, cant_gar, pro_gar, cant_len, cant_pintcolor, pro_pintcolor, cant_raycolor, pro_raycolor, cant_colordef, pro_colordef, pro_len):
     medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
-                        fecha=fecha)
+                        fecha=fecha, Cant_arro=Cant_arr, pro_arr=pro_arr, cant_arv=cant_arv,
+                        pro_arv=pro_arv, cant_gar=cant_gar, pro_gar=pro_gar, cant_len=cant_len,
+                        cant_pintcolor=cant_pintcolor, pro_pintcolor=pro_pintcolor,
+                        cant_raycolor=cant_raycolor, pro_raycolor=pro_raycolor, cant_colordef=cant_colordef, pro_colordef=pro_colordef,prolent=pro_len)
     db.session.add(medicion)
     db.session.commit()
     return True
+
 
 # @app.route('/')
 # def index():
@@ -44,22 +50,60 @@ def guardar_medicion(ph,densidad,cond_elec,fecha):
 @app.route('/home')
 @login_required
 def home():
- return render_template('home.html')
+    return render_template('home.html')
+
+
+@app.route('/parcela')
+@login_required
+def inicio():
+    return render_template("parcela.html")
+
+
+@app.route('/procesar', methods=['POST'])
+@login_required
+def procesar():
+    arroz = request.form.get("arroz")
+    arveja = request.form.get("arveja")
+    garbanzo = request.form.get("garbanzo")
+    lenteja = request.form.get("lenteja")
+    pcolor = request.form.get("pcolor")
+    rcolor = request.form.get("rcolor")
+    colord = request.form.get("colord")
+
+
+    return redirect(url_for('predict', a=arroz,ar=arveja,g=garbanzo,l=lenteja,pc=pcolor,rc=rcolor,c=colord))
+
 
 @app.route("/predict", methods=['GET', 'POST'])
 @login_required
 def predict():
-    recomen = ""
+    ar = (int)(request.args.get("a"))
+    arv = (int)(request.args.get("ar"))
+    ga = (int)(request.args.get("g"))
+    len = (int)(request.args.get("l"))
+    pco = (int)(request.args.get("pc"))
+    rco = (int)(request.args.get("rc"))
+    co = (int)(request.args.get("c"))
     form = MedicionForm()
+
     if form.validate_on_submit():
+        p1 = request.form.get("pr1")
+        p2 = request.form.get("pr2")
+        p3 = request.form.get("pr3")
+        p4 = request.form.get("pr4")
+        p5 = request.form.get("pr5")
+        p6 = request.form.get("pr6")
+        p7 = request.form.get("pr7")
+
         ph = form.ph.data
         densidad = form.densidad.data
         cond_elec = form.cond_elect.data
         fecha = form.fecha.data
-        guardar_medicion(ph,densidad,cond_elec,fecha)
+        guardar_medicion(ph, densidad, cond_elec, fecha, ar, p1, arv, p2, ga, p3, len, pco, p5, rco, p6, co, p7, p4)
         return redirect(url_for('recomendacion'))
 
-    return render_template('ingreso_datos.html',form=form)
+    return render_template('ingreso_datos.html', form=form,es1=ar,es2=arv,es3=ga,es4=len,es5=pco,es6=rco,es7=co)
+
 
 @app.route("/", methods=['GET', 'POST'])
 def login():
@@ -68,37 +112,47 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = Usuario.query.filter_by(email=form.email.data).first()
-        if user and utils.verify_password(form.password.data,user.password):
+        if user and utils.verify_password(form.password.data, user.password):
             login_user(user, remember=form.remember.data)
-            #next_page = request.args.get('next')
+            # next_page = request.args.get('next')
             if user.has_role('admin'):
                 return redirect(url_for('admin.home_admin'))
             elif user.has_role('tecnico'):
                 return redirect(url_for('home'))
-                #return redirect(next_page) if next_page else redirect(url_for('home'))
+                # return redirect(next_page) if next_page else redirect(url_for('home'))
         else:
             flash('Error al acceder. Por favor verifique su email y/o contraseña', 'danger')
     return render_template('login.html', form=form)
+
 
 @app.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 admin.add_view(UserAdmin(Usuario, db.session))
-@app.route("/recomendacion")
+
+
+@app.route("/recomendacion",methods=['GET', 'POST'])
 def recomendacion():
 
-    ph=db.session.query(Medicion.ph).all();
-    ph= pd.DataFrame(ph, columns = ['Name'])
-    datosph=ph.values.astype('float32')
-    den=db.session.query(Medicion.densidad).all();
-    den=pd.DataFrame(den, columns = ['Name'])
-    datosden = den.values.astype('float32')
-    CE=db.session.query(Medicion.cond_elec).all();
-    CE=pd.DataFrame(CE, columns = ['Name'])
-    datosce = CE.values.astype('float32')
 
+
+    dgarbanzo = request.args.get("d")
+    print("ddd", dgarbanzo)
+
+
+
+    ph = db.session.query(Medicion.ph).all();
+    ph = pd.DataFrame(ph, columns=['Name'])
+    datosph = ph.values.astype('float32')
+    den = db.session.query(Medicion.densidad).all();
+    den = pd.DataFrame(den, columns=['Name'])
+    datosden = den.values.astype('float32')
+    CE = db.session.query(Medicion.cond_elec).all();
+    CE = pd.DataFrame(CE, columns=['Name'])
+    datosce = CE.values.astype('float32')
 
     # df = pd.read_csv("C:/Users/Amanda/Downloads/Tesis_Zambrano_Meza-main/conjunto_datos/datos_clasificados.csv",
     #                  names=["dia", "CE", "PH", "D", "C"])
@@ -121,15 +175,15 @@ def recomendacion():
     suma_PH = 0;
     suma_D = 0;
 
-    #training_data = np.empty(shape=[0, 3])
-    #target_data = np.empty(shape=[0])
-    #print("se7", sum(list(map(float,ph))));
-    #print("xd",ph);
+    # training_data = np.empty(shape=[0, 3])
+    # target_data = np.empty(shape=[0])
+    # print("se7", sum(list(map(float,ph))));
+    # print("xd",ph);
 
-    if (len(ph)<=10):
+    if (len(ph) <= 10):
         a = 0
         b = 10
-        #print("entro aqui")
+        # print("entro aqui")
         for j in range(a, b):
             suma_CE = suma_CE + datosce[j];
             suma_PH = suma_PH + datosph[j];
@@ -138,22 +192,22 @@ def recomendacion():
     a = 0
     b = 10
 
-    if (len(ph)>10):
-        b=len(ph)-1
-        a=len(ph)-10
-        #print("entro aca")
+    if (len(ph) > 10):
+        b = len(ph) - 1
+        a = len(ph) - 10
+        # print("entro aca")
         for j in range(a, b):
             suma_CE = suma_CE + datosce[j];
             suma_PH = suma_PH + datosph[j];
             suma_D = suma_D + datosden[j];
         print("Datos de ", a, " hasta ", b);
 
-    #print("Datos de ", a, " hasta ", b);
+    # print("Datos de ", a, " hasta ", b);
     pro_CE = float(suma_CE / 10);
 
     pro_PH = float(suma_PH / 10);
     # print(pro_PH);
-    pro_D =float( suma_D / 10);
+    pro_D = float(suma_D / 10);
     # print(pro_D);
 
     suma_CE = 0;
@@ -179,7 +233,8 @@ def recomendacion():
     elif answer == 4:
         print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
         recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
-    return render_template('recomendacion.html',r=recomen)
+    return render_template('recomendacion.html', r=recomen)
+
 
 def send_reset_email(user):
     token = user.get_reset_token()
@@ -192,6 +247,7 @@ Si no hiciste esta solicitud simplemente ignora este correo y no se hará ningú
 '''
     mail.send(msg)
 
+
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
@@ -203,6 +259,7 @@ def reset_request():
         flash('Se ha enviado un email con instrucciones para reestablecer su contraseña.', 'info')
         return redirect(url_for('login'))
     return render_template('reset_request.html', form=form)
+
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
@@ -225,6 +282,8 @@ def reset_token(token):
 # Setup Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, Usuario, Rol)
 security = Security(app, user_datastore)
+
+
 @security.context_processor
 def security_context_processor():
     return dict(
@@ -233,9 +292,9 @@ def security_context_processor():
         get_url=url_for
     )
 
+
 @app.before_first_request
 def before_first_request():
-
     # Create any database tables that don't exist yet.
     db.create_all()
 
@@ -261,18 +320,20 @@ def before_first_request():
     user_datastore.add_role_to_user('admin@example.com', 'admin')
     db.session.commit()
 
+
 @app.route('/historial', methods=['GET', 'POST'])
 @login_required
 def buscar_recomendaciones():
-    recs=[]
+    recs = []
     fecha_inicio = request.args.get('desde')
     fecha_fin = request.args.get('hasta')
-    print('fecha inicio',fecha_inicio)
+    print('fecha inicio', fecha_inicio)
     if fecha_inicio and fecha_fin:
-        if fecha_inicio>fecha_fin:
+        if fecha_inicio > fecha_fin:
             flash('La fecha de inicio no puede ser mayor a la fecha fin', 'warning')
         else:
-            recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,Medicion.fecha>=fecha_inicio).all()
+            recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,
+                                                                         Medicion.fecha >= fecha_inicio).all()
         print(recs)
-        #recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
-    return render_template('historial.html',recs=recs)
+        # recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
+    return render_template('historial.html', recs=recs)
