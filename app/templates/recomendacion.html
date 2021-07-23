@@ -59,194 +59,84 @@
         <div class="container-fluid">
             <h1 class="mt-4" align="center">Recomendación</h1>
             <p align="center">Asistente Agrícola le recomienda hoy:</p>
-            <center><h2><span class="label label-default">{{ r }}</span></h2></center>
-            <style>
-                        .slider {
-  width: 320px;
-  height: 2px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 2px;
-  position: relative;
-}
-.slider .ui-slider-range {
-  border-radius: 2px;
-  background: #000;
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-}
-.slider .ui-slider-handle {
-  cursor: move;
-  cursor: grab;
-  cursor: -webkit-grab;
-  width: 32px;
-  height: 32px;
-  position: absolute;
-  outline: none;
-  top: 0;
-  z-index: 1;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.2);
-  margin: -1px 0 0 0;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  transition: box-shadow .3s ease;
-}
-.slider .ui-slider-handle .smiley {
-  position: absolute;
-  left: 50%;
-  bottom: 100%;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid #000;
-  opacity: 0;
-  -webkit-transform: translate(-50%, -12px);
-  transform: translate(-50%, -12px);
-  transition: all .3s ease 0s;
-}
-.slider .ui-slider-handle .smiley:before, .slider .ui-slider-handle .smiley:after {
-  content: '';
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #000;
-  position: absolute;
-  top: 8px;
-}
-.slider .ui-slider-handle .smiley:before {
-  left: 7px;
-}
-.slider .ui-slider-handle .smiley:after {
-  right: 7px;
-}
-.slider .ui-slider-handle .smiley svg {
-  width: 16px;
-  height: 7px;
-  position: absolute;
-  left: 50%;
-  bottom: 5px;
-  margin: 0 0 0 -8px;
-}
-.slider .ui-slider-handle .smiley svg path {
-  stroke-width: 3.4;
-  stroke: #000;
-  fill: none;
-  stroke-linecap: round;
-}
-.slider .ui-slider-handle.ui-state-active {
-  cursor: grabbing;
-  cursor: -webkit-grabbing;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
-}
-.slider .ui-slider-handle.ui-state-active + .text {
-  -webkit-transform: translate(0, -80px);
-  transform: translate(0, -80px);
-  transition: -webkit-transform .3s ease 0s;
-  transition: transform .3s ease 0s;
-  transition: transform .3s ease 0s, -webkit-transform .3s ease 0s;
-}
-.slider .ui-slider-handle.ui-state-active .smiley {
-  opacity: 1;
-  -webkit-transform: translate(-50%, -12px);
-  transform: translate(-50%, -12px);
-  transition: all .3s ease .1s;
-}
-.slider .text {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  -webkit-transform: translate(0, -44px);
-  transform: translate(0, -44px);
-  transition: -webkit-transform .3s ease .2s;
-  transition: transform .3s ease .2s;
-  transition: transform .3s ease .2s, -webkit-transform .3s ease .2s;
-  font-size: 16px;
-}
-.slider .text strong {
-  color: #000;
-  font-weight: bold;
-}
-                    </style>
-            <br><br><br><br><center><div class="slider">
-            <div class="ui-slider-handle">
-                <div class="smiley">
-                    <svg viewBox="0 0 34 10" version="1.1">
-                        <path d=""></path>
-                    </svg>
-                </div>
-            </div>
-            <div class="text">
-                <span>Califique esta recomendación</span>
-                <strong>-</strong>
-            </div>
-        </div></center>
+            <div class="container-fluid">
+            <form align="center" method="POST" action="{{ url_for('guardar_recomendacion') }}">
+                {{ form.hidden_tag() }}
+                <div align="center" class="form-group">
+                    {{ form.descrip.label(class="form-control-label") }}
+                    {% if form.descrip.errors %}
+                    {{ form.descrip(class="form-control form-control-md is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.descrip.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
 
+                    <div align="center" class="col-sm-3">
+                        {{ form.descrip(class="form-control form-control-md") }}
+                    </div>
+                     {% endif %}
+                </div><br>
+                <div align="center" class="form-group">
+                    {{ form.de_acuerdo.label(class="form-control-label") }}
+                    {% if form.de_acuerdo.errors %}
+                    {{ form.de_acuerdo(class="form-control form-control-md is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.de_acuerdo.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
 
-            <script>var step = 10;
+                    <div align="center" class="col-sm-3">
+                        {{ form.de_acuerdo(class="form-control form-control-md") }}
+                    </div>
+                     {% endif %}
+                </div><br>
+                <div align="center" class="form-group">
+                    {{ form.otra_sugerencia.label(class="form-control-label") }}
+                    {% if form.otra_sugerencia.errors %}
+                    {{ form.otra_sugerencia(class="form-control form-control-md is-invalid") }}
+                    <div class="invalid-feedback">
+                        {% for error in form.otra_sugerencia.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
 
-$(".slider").each(function () {
-    var self = $(this);
-    var slider = self.slider({
-        create: function () {
-            self.find('.text strong').text(self.slider('value'));
-            setPathData(self.find('.smiley').find('svg path'), self.slider('value'));
-        },
-        slide: function (event, ui) {
-            self.find('.text strong').text(ui.value);
-            setPathData(self.find('.smiley').find('svg path'), ui.value);
-        },
-        range: 'min',
-        min: 1,
-        max: step,
-        value: 1,
-        step: 1 });
+                    <div align="center" class="col-sm-3">
+                        {{ form.otra_sugerencia(class="form-control form-control-md") }}
+                    </div>
+                     {% endif %}
+                </div><br>
 
-});
-
-function setPathData(path, value) {
-    var firstStep = 6 / step * value;
-    var secondStep = 2 / step * value;
-    path.attr('d', 'M1,' + (7 - firstStep) + ' C6.33333333,' + (2 + secondStep) + ' 11.6666667,' + (1 + firstStep) + ' 17,' + (1 + firstStep) + ' C22.3333333,' + (1 + firstStep) + ' 27.6666667,' + (2 + secondStep) + ' 33,' + (7 - firstStep));
-}</script>
-            <script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-36251023-1']);
-  _gaq.push(['_setDomainName', 'jqueryscript.net']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
-          <center>  <br><br>
-              <div align="center" class="form-group row">
-<label align="center" class="col-sm-2 col-form-label col-form-label-sm">¿Qué opina de esta recomendación?
-(opcional)</label>
-            <div align="center" class="col-sm-3">
-      <textarea class="form-control" rows="3"></textarea>
-    </div>
-              </div></center>
+                <center>{{ form.guardar(class="btn btn-primary") }}</center>
+            </form>
 
         </div>
-        <center><a class="btn btn-primary" href="/recomendacion" role="button">Aceptar</a></center>
     </div>
-
+</div>
 </div>
 
 <!-- Bootstrap core JS-->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Core theme JS-->
 <script src="static/js/scripts2.js"></script>
-
+<script type="text/javascript">
+$(document).ready(function() {
+$("#otra_sugerencia").hide();
+$('label[for="otra_sugerencia"]').hide();
+$("input[id$='de_acuerdo-1']").click(function() {
+  $("#otra_sugerencia").show();
+  $('label[for="otra_sugerencia"]').show();
+});
+$("input[id$='de_acuerdo-0']").click(function() {
+  $("#otra_sugerencia").hide();
+  $('label[for="otra_sugerencia"]').hide();
+  $('#otra_sugerencia').val('');
+});
+});
+</script>
 </body>
 </html>

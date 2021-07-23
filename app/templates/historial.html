@@ -42,5 +42,19 @@
         </table>
     </div>
     </div>
+<a class="btn btn-success" href="/imprimir" role="button">Link</a>
 
 {% endblock content %}
+{% block footer %}
+<script type=text/javascript>
+  $(function() {
+    $('a#calculate').bind('click', function() {
+      $.getJSON($SCRIPT_ROOT + '/imprimir', {
+        recs: recs
+      }, function(data) {
+      });
+      return false;
+    });
+  });
+</script>
+{% endblock footer %}

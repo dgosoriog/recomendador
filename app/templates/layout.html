@@ -85,6 +85,9 @@
     <script src="static/js/bootstrap.min.js"></script>
     <script src="static/js/owl.carousel.min.js"></script>
     <script src="static/js/main3.js"></script>
-
+    <script type=text/javascript>
+        $SCRIPT_ROOT = {{ request.script_root|tojson }};
+    </script>
+        {% block footer %}{% endblock %}
 </body>
 </html>

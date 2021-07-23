@@ -5,6 +5,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_security import Security, SQLAlchemyUserDatastore, \
     UserMixin, RoleMixin, login_required
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+import enum
+from sqlalchemy import Enum
+class MyEnum(enum.Enum):
+    one = 1
+    two = 2
+    three = 3
 
 # Define models
 roles_usuarios = db.Table('roles_usuarios',
@@ -65,9 +71,9 @@ class Medicion(db.Model):
 class Recomendacion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descrip = db.Column(db.String(30), nullable=False)
-    puntuacion = db.Column(db.Integer)
-    opinion = db.Column(db.String(100))
+    de_acuerdo = db.Column(db.String(2), unique=False)
+    otra_sugerencia = db.Column(db.String(100),nullable=True, default='')
     medicion_id = db.Column(db.Integer, db.ForeignKey('medicion.id'), unique=True)
 
     def __repr__(self):
-        return f"Recomendacion('{self.descrip}', '{self.puntuacion}', '{self.opinion}', '{self.medicion.fecha}')"
+        return f"Recomendacion('{self.descrip}', '{self.de_acuerdo}', '{self.alternativa}', '{self.medicion.fecha}')"

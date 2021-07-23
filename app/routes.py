@@ -1,9 +1,9 @@
-from flask import render_template, url_for, flash, redirect, request
+from flask import render_template, url_for, flash, redirect, request, Response, session, jsonify
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_security import SQLAlchemyUserDatastore, Security, utils
 
 from app import app, db, admin, bcrypt, mail
-from app.forms import LoginForm, MedicionForm, RequestResetForm, ResetPasswordForm
+from app.forms import LoginForm, MedicionForm, RequestResetForm, ResetPasswordForm, RecomendacionForm
 from app.admin import UserAdmin
 from app.models import Usuario, Rol, Medicion, Recomendacion
 from flask_mail import Message
@@ -18,10 +18,18 @@ from keras.models import Sequential
 from keras.models import load_model
 from numpy import array
 
+
 # main = Blueprint('main', __name__)
 cont = 0
 
 
+from fpdf import FPDF
+from app.funciones_adicionales import serialize
+from json import dumps
+import ast
+
+#main = Blueprint('main', __name__)
+cont=0
 def get_model():
     global model
     model = load_model('recomendador.h5')
@@ -39,7 +47,6 @@ def guardar_medicion(ph, densidad, cond_elec, fecha, Cant_arr, pro_arr, cant_arv
     db.session.add(medicion)
     db.session.commit()
     return True
-
 
 # @app.route('/')
 # def index():
@@ -74,9 +81,9 @@ def procesar():
     return redirect(url_for('predict', a=arroz,ar=arveja,g=garbanzo,l=lenteja,pc=pcolor,rc=rcolor,c=colord))
 
 
-@app.route("/predict", methods=['GET', 'POST'])
+@app.route("/medicion", methods=['GET', 'POST'])
 @login_required
-def predict():
+def ingresar_datos():
     ar = (int)(request.args.get("a"))
     arv = (int)(request.args.get("ar"))
     ga = (int)(request.args.get("g"))
@@ -85,7 +92,6 @@ def predict():
     rco = (int)(request.args.get("rc"))
     co = (int)(request.args.get("c"))
     form = MedicionForm()
-
     if form.validate_on_submit():
         p1 = request.form.get("pr1")
         p2 = request.form.get("pr2")
@@ -95,13 +101,19 @@ def predict():
         p6 = request.form.get("pr6")
         p7 = request.form.get("pr7")
 
+
         ph = form.ph.data
         densidad = form.densidad.data
         cond_elec = form.cond_elect.data
         fecha = form.fecha.data
-        guardar_medicion(ph, densidad, cond_elec, fecha, ar, p1, arv, p2, ga, p3, len, pco, p5, rco, p6, co, p7, p4)
-        return redirect(url_for('recomendacion'))
-
+        medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
+                            fecha=fecha)
+        db.session.add(medicion)
+        db.session.commit()
+        id = medicion.id
+        session['id_med'] = id
+        print('MEDICION',medicion.id)
+        return redirect(url_for('get_recomendacion'))
     return render_template('ingreso_datos.html', form=form,es1=ar,es2=arv,es3=ga,es4=len,es5=pco,es6=rco,es7=co)
 
 
@@ -128,27 +140,24 @@ def login():
 @app.route("/logout")
 def logout():
     logout_user()
+    session.pop('id_med', None)
+    session.pop('busqueda_recomendaciones', None)
+    session.pop('fecha_inicio', None)
+    session.pop('fecha_fin', None)
     return redirect(url_for('login'))
 
 
 admin.add_view(UserAdmin(Usuario, db.session))
-
-
-@app.route("/recomendacion",methods=['GET', 'POST'])
-def recomendacion():
-
-
-
+@app.route("/recomendacion")
+def get_recomendacion():
+    form = RecomendacionForm()
     dgarbanzo = request.args.get("d")
     print("ddd", dgarbanzo)
-
-
-
-    ph = db.session.query(Medicion.ph).all();
-    ph = pd.DataFrame(ph, columns=['Name'])
-    datosph = ph.values.astype('float32')
-    den = db.session.query(Medicion.densidad).all();
-    den = pd.DataFrame(den, columns=['Name'])
+    ph=db.session.query(Medicion.ph).all();
+    ph= pd.DataFrame(ph, columns = ['Name'])
+    datosph=ph.values.astype('float32')
+    den=db.session.query(Medicion.densidad).all();
+    den=pd.DataFrame(den, columns = ['Name'])
     datosden = den.values.astype('float32')
     CE = db.session.query(Medicion.cond_elec).all();
     CE = pd.DataFrame(CE, columns=['Name'])
@@ -233,8 +242,24 @@ def recomendacion():
     elif answer == 4:
         print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
         recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
-    return render_template('recomendacion.html', r=recomen)
+    form.descrip.data = recomen
+    return render_template('recomendacion.html',form= form)
 
+@app.route("/guardar_recomendacion", methods=['GET', 'POST'])
+@login_required
+def guardar_recomendacion():
+    form = RecomendacionForm()
+    if form.validate_on_submit():
+        descrip = form.descrip.data
+        de_acuerdo = form.de_acuerdo.data
+        otra_sugerencia = form.otra_sugerencia.data
+        recomendacion = Recomendacion(descrip=descrip, de_acuerdo=de_acuerdo, otra_sugerencia=otra_sugerencia,
+                                      medicion_id=session.get('id_med'))
+        db.session.add(recomendacion)
+        db.session.commit()
+        print('ID-------->', session.get('id_med'))
+        return redirect(url_for('ingresar_datos'))
+    return render_template('recomendacion.html',form=form)
 
 def send_reset_email(user):
     token = user.get_reset_token()
@@ -327,13 +352,74 @@ def buscar_recomendaciones():
     recs = []
     fecha_inicio = request.args.get('desde')
     fecha_fin = request.args.get('hasta')
-    print('fecha inicio', fecha_inicio)
     if fecha_inicio and fecha_fin:
         if fecha_inicio > fecha_fin:
             flash('La fecha de inicio no puede ser mayor a la fecha fin', 'warning')
         else:
             recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,
                                                                          Medicion.fecha >= fecha_inicio).all()
-        print(recs)
-        # recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
-    return render_template('historial.html', recs=recs)
+        #print('RECs',recs)
+        serialized_labels = [
+            serialize(row)
+            for row in db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,
+                                                                         Medicion.fecha >= fecha_inicio).all()
+        ]
+        recomendaciones = dumps(serialized_labels)
+        print('RECOMENDACIONES',recomendaciones)
+        session['busqueda_recomendaciones'] = recomendaciones
+        session['fecha_inicio'] = fecha_inicio
+        session['fecha_fin'] = fecha_fin
+        #session.pop('logged_in', None)
+        #recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
+    return render_template('historial.html',recs=recs)
+
+class PDF(FPDF):
+    def header(self):
+        # Logo
+        self.image('app/static/images/hoja.png', 10, 8, 20)
+        # helvetica bold 15
+        self.set_font('helvetica', 'B', 15)
+        self.page_width = self.w - 2 * self.l_margin
+        # Title
+        self.cell(self.page_width, 0.0,'Reporte de Recomendaciones', align='C')
+        # Line break
+        # self.ln(20)
+
+    # Page footer
+    def footer(self):
+        # Position at 1.5 cm from bottom
+        self.set_y(-15)
+        # helvetica italic 8
+        self.set_font('helvetica', 'I', 8)
+        # Page number
+        self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
+
+@app.route('/imprimir')
+@login_required
+def imprimir_reporte():
+    document= PDF()
+    document.alias_nb_pages()
+    document.add_page()
+    document.set_font('Times', '', 12)
+    th = document.font_size
+    col_width = document.page_width / 4
+    document.ln(6 * th)
+    document.cell(col_width/2, th, 'Desde:', border=0)
+    document.cell(col_width/2, th,  str(session.get('fecha_inicio')), border=0)
+    document.cell(col_width/2, th, 'Hasta:', border=0)
+    document.cell(col_width/2, th,  str(session.get('fecha_fin')), border=0)
+    document.ln(2 * th)
+    document.cell(col_width, th, 'N°', border=1)
+    document.cell(col_width, th, 'Descripción', border=1)
+    document.ln(th)
+    recos = ast.literal_eval(session.get('busqueda_recomendaciones'))
+    for i in recos:
+        document.cell(col_width, th, str(i['id']), border=1)
+        document.cell(col_width, th, i['descrip'], border=1)
+        document.ln(th)
+    return Response(document.output(dest='S'), mimetype='application/pdf', headers={'Content-Disposition':'attachment;filename=recomendaciones.pdf'})
+
+# def get_recomendaciones(fecha_desde,fecha_hasta):
+#     recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_hasta,
+#                                                                  Medicion.fecha >= fecha_desde).all()
+#     return recs
