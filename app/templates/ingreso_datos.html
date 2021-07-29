@@ -121,174 +121,68 @@
                         {{ form.fecha(class="datepicker") }}
                     </div>
                      {% endif %}
-
+<h1 class="mt-4" align="center">Ingreso de Datos</h1>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<table border="1">
-
-     <tr>
-      <td>Arroz</td>
-                    {% for i in range(es1) %}
-
-                <td><input class="expenses1" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum1" name="pr1" placeholder="Promedio"></td>
-  </tr>
-  <tr>
-      <td>Arveja</td>
-                    {% for i in range(es2) %}
-
-                <td><input class="expenses2" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum2" name="pr2" placeholder="Promedio"></td>
-  </tr>
-     <tr>
-      <td>Garbanzo</td>
-                    {% for i in range(es3) %}
-
-                <td><input class="expenses3" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum3" name="pr3" placeholder="Promedio"></td>
-  </tr>
+<table>
     <tr>
-      <td>Lenteja</td>
-                    {% for i in range(es4) %}
-
-                <td><input class="expenses4" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum4" name="pr4" placeholder="Promedio"></td>
-  </tr>
+        <td></td>
+        <td align="right">Ce_Compost:</td>
+        <td><input name="cec" ></td>
+    </tr>
     <tr>
-      <td>PintColor</td>
-                    {% for i in range(es5) %}
-
-                <td><input class="expenses5" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum5" name="pr5" placeholder="Promedio"></td>
-  </tr>
-  <tr>
-      <td>RayColor</td>
-                    {% for i in range(es6) %}
-
-                <td><input class="expenses6" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum6" name="pr6" placeholder="Promedio"></td>
-  </tr>
+        <td></td>
+        <td align="right">Ph_Compost:</td>
+        <td><input name="phc" ></td>
+    </tr>
     <tr>
-      <td>ColorDef</td>
-                    {% for i in range(es7) %}
+        <td></td>
+        <td align="right">DE_Compost:</td>
+        <td><input name="dec" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ce_Tanque:</td>
+        <td><input name="cet" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ph_tanque:</td>
+        <td><input name="pht" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ce_Goteo:</td>
+        <td><input name="ceg" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ph_Goteo:</td>
+        <td><input name="phg" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ce_suelo:</td>
+        <td><input name="ces" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ph_Suelo:</td>
+        <td><input name="phs" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ce_Programac:</td>
+        <td><input name="cep" ></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td align="right">Ph_Programac:</td>
+        <td><input name="php" ></td>
+    </tr>
 
-                <td><input class="expenses7" ></td>
-                {% endfor %}
-    <td><input class="expenses_sum7" name="pr7" placeholder="Promedio"></td>
-  </tr>
+
 </table>
-                    <script>
-                        $(document).ready(function() {
-  $(".expenses1").on('keyup change', calculateSum);
-});
 
-$(document).ready(function() {
-  $(".expenses2").on('keyup change', calculateSum);
-});
-$(document).ready(function() {
-  $(".expenses3").on('keyup change', calculateSum);
-});
-$(document).ready(function() {
-  $(".expenses4").on('keyup change', calculateSum);
-});
-$(document).ready(function() {
-  $(".expenses5").on('keyup change', calculateSum);
-});
-$(document).ready(function() {
-  $(".expenses6").on('keyup change', calculateSum);
-});
-$(document).ready(function() {
-  $(".expenses7").on('keyup change', calculateSum);
-});
-
-function calculateSum() {
-  var $input = $(this);
-  var $row = $input.closest('tr');
-  var sum1 = 0
-  var cont1=0;
-
-  var sum2 = 0
-  var cont2=0;
-
-  var sum3 = 0
-  var cont3=0;
-
-  var sum4 = 0
-  var cont4=0;
-
-  var sum5 = 0
-  var cont5=0;
-
-  var sum6 = 0
-  var cont6=0;
-
-  var sum7 = 0
-  var cont7=0;
-
-  $row.find(".expenses1").each(function() {
-    sum1 += parseFloat(this.value) || 0;
-    cont1=cont1+1;
-
-  });
-  sum1=sum1/cont1;
-
-  $row.find(".expenses2").each(function() {
-    sum2 += parseFloat(this.value) || 0;
-    cont2=cont2+1;
-
-  });
-  sum2=sum2/cont2;
-
-  $row.find(".expenses3").each(function() {
-    sum3 += parseFloat(this.value) || 0;
-    cont3=cont3+1;
-
-  });
-  sum3=sum3/cont3;
-
-  $row.find(".expenses4").each(function() {
-    sum4 += parseFloat(this.value) || 0;
-    cont4=cont4+1;
-
-  });
-  sum4=sum4/cont4;
-
-  $row.find(".expenses5").each(function() {
-    sum5 += parseFloat(this.value) || 0;
-    cont5=cont5+1;
-
-  });
-  sum5=sum5/cont5;
-
-  $row.find(".expenses6").each(function() {
-    sum6 += parseFloat(this.value) || 0;
-    cont6=cont6+1;
-
-  });
-  sum6=sum6/cont6;
-
-  $row.find(".expenses7").each(function() {
-    sum7 += parseFloat(this.value) || 0;
-    cont7=cont7+1;
-
-  });
-  sum7=sum7/cont7;
-
-  $row.find(".expenses_sum1").val(sum1.toFixed(2));
-  $row.find(".expenses_sum2").val(sum2.toFixed(2));
-  $row.find(".expenses_sum3").val(sum3.toFixed(2));
-  $row.find(".expenses_sum4").val(sum4.toFixed(2));
-  $row.find(".expenses_sum5").val(sum5.toFixed(2));
-  $row.find(".expenses_sum6").val(sum6.toFixed(2));
-  $row.find(".expenses_sum7").val(sum7.toFixed(2));
-
-}
-                    </script>
 
                 <center>{{ form.cargar(class="btn btn-primary") }}</center>
                 </div></form>
