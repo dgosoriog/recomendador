@@ -67,6 +67,10 @@ def guardar_medicion(ph, densidad, cond_elec, fecha, Cant_arr, pro_arr, cant_arv
 def home():
     return render_template('home.html')
 
+@app.route('/help')
+@login_required
+def help():
+    return render_template('help.html')
 
 @app.route('/parcela')
 @login_required
