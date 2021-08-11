@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1 class="mt-4" align="center">Usuarios</h1>
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-8">
+        <table class="table table-success table-striped">
+            <thead>
+            <tr>
+                <th scope="col">Correo</th>
+                <th scope="col">Rol</th>
+                <th scope="col">Acciones</th>
+            </tr>
+              </thead>
+              <tbody>
+              {% for r in users %}
+                <tr>
+                    <td>{{ r.email }}</td>
+                    <td>{{ r.role.name }}</td>
+                    <td>
+                        <a class="btn btn-primary" href="/usuarios/editar/{{ r.id }}" role="button">Editar</a>
+                        <a class="btn btn-danger btn-delete" href="/usuarios/eliminar/{{ r.id }}" role="button">Eliminar</a>
+                    </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+        </table>
+    </div>
+        <div class="col"></div>
+    </div>
+        <div class="row">
+            <div class="col">
+                <a class="btn btn-primary" href="/usuarios/nuevo" role="button">Nuevo</a>
+            </div>
+        </div>
+{% endblock content %}
+{% block footer %}
+<script>
+const btnDelete= document.querySelectorAll('.btn-delete');
+if(btnDelete) {
+  const btnArray = Array.from(btnDelete);
+  btnArray.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      if(!confirm('Está seguro que desea eliminar este usuario?')){
+        e.preventDefault();
+      }
+    });
+  })
+}
+</script>
+{% endblock footer%}

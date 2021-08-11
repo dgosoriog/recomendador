@@ -1,36 +1,168 @@
 {% extends "layout.html" %}
 {% block content %}
-      <form method="POST" action="{{url_for('procesar')}}">
-            <label>Ingrese Cantidad Arroz:</label><input name="arroz" required type="number">
-            <br><br>
-            <label>Ingrese Cantidad arveja:</label><input name="arveja" required type="number">
-            <br><br>
-          <label>Ingrese Cantidad garbanzo:</label><input name="garbanzo" required type="number">
-            <br><br>
-            <label>Ingrese Cantidad lenteja:</label><input name="lenteja" required type="number">
-            <br><br>
-          <label>Ingrese Cantidad pintando color:</label><input name="pcolor" required type="number">
-            <br><br>
-            <label>Ingrese Cantidad rayando color:</label><input name="rcolor" required type="number">
-            <br><br>
-          <label>Ingrese Cantidad color definido:</label><input name="colord" required type="number">
-            <br><br>
-
-            <input type="submit" value="Enviar">
-        </form>
-
+    <h2 class="mt-4" align="center">Ingreso de Datos</h2>
+      <form method="POST" align="center" action="{{url_for('procesarform1')}}">
+          <div class="container-fluid">
+              <div class="row">
+                <div class="col-sm-6">
+                    <label for="fechamed" class="form-label">Fecha</label>
+                    <input type="date" id="fechamed" name="fechamed" value="{{ hoy }}" required class="form-control">
+                </div>
+                <div class="col-sm-6">
+                    <label for="bloque">Bloque</label>
+                      <select class="form-control" name="bloque" id="bloque" required>
+                        <option selected disabled value="">Seleccionar...</option>
+                      {% for j in bloques %}
+                        <option value="{{j.id}}">{{j.num_bloque}}</option>
+                      {% endfor %}
+                      </select>
+                </div>
+          </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <label for="cama">Cama</label>
+                      <select class="form-control" name="cama" id="cama" required>
+                        <option selected disabled value="">Seleccionar...</option>
+                      </select>
+                    </div>
+                    <div class="col-sm-6">
+                    <label for="variedad" class="form-label">Variedad</label>
+                    <input id="variedad" name="variedad" type="text" value="-" readonly class="form-control-plaintext" style="text-align:center;"/>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6">
+                    <label for="muestreo" class="form-label">Muestreo</label>
+                    <input id="muestreo" class="form-control" name="muestreo" type="number" min="1" required onkeyup="validar_muestreo()"/>
+                    </div>
+                    <div class="col-sm-6">
+                    <label for="ciclo" class="form-label">Ciclo</label>
+                    <input id="ciclo" name="ciclo" type="text" value="-" readonly class="form-control-plaintext" style="text-align:center;"/>
+                    </div>
+                </div>
+          </div>
+          <br>
+          <div class="container-fluid">
+              <div class="row">
+                  <div class="col">
+                        <p>Ingrese la cantidad de botones por Estadíos y su correspondiente medida. Si no existen botones en un estadío, ingresar 0 (cero).</p>
+                  </div>
+              </div>
+          </div>
+          <br>
+              <div class="container-fluid">
+                  <div class="row">
+                      <div class="col"></div>
+                      <div class="col-8">
+              <table class="table table-success table-striped">
+              <thead>
+                <tr>
+                  <th scope="col">Estadío</th>
+                    <th scope="col">N° Botones</th>
+                    <th scope="col">Medidas Botones</th>
+                  <th scope="col">Promedio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Arroz</th>
+                    <td><input id="arroz" name="arroz" required type="number" onkeydown="datosArroz()" min="0" class="form-control"></td>
+                    <td><div id="datosArroz"></div></td>
+                    <td><input id="prom_arroz" name="prom_arroz" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Arveja</th>
+                    <td><input id="arveja" name="arveja" required type="number" onkeydown="datosArveja()" min="0" class="form-control"></td>
+                    <td><div id="datosArveja"></div></td>
+                    <td><input id="prom_arveja" name="prom_arveja" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Garbanzo</th>
+                    <td><input id="garbanzo" name="garbanzo" required type="number" onkeydown="datosGarbanzo()" min="0" class="form-control"></td>
+                    <td><div id="datosGarbanzo"></div></td>
+                    <td><input id="prom_garb" name="prom_garb" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Lenteja</th>
+                    <td><input id="lenteja" name="lenteja" required type="number" onkeydown="datosLenteja()" min="0" class="form-control"></td>
+                    <td><div id="datosLenteja"></div></td>
+                    <td><input id="prom_lenteja" name="prom_lenteja" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Rayando Color</th>
+                    <td><input id="rcolor" name="rcolor" required type="number" onkeydown="datosrcolor()" min="0" class="form-control"></td>
+                    <td><div id="datosrcolor"></div></td>
+                    <td><input id="prom_rcolor" name="prom_rcolor" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Pintando Color</th>
+                    <td><input id="pcolor" name="pcolor" required type="number" onkeydown="datospcolor()" min="0" class="form-control"></td>
+                    <td><div id="datospcolor"></div></td>
+                    <td><input id="prom_pcolor" name="prom_pcolor" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+                <tr>
+                  <th scope="row">Color Definido</th>
+                    <td><input id="colord" name="colord" required type="number" onkeydown="datoscolord()" min="0" class="form-control"></td>
+                    <td><div id="datoscolord"></div></td>
+                    <td><input id="prom_colord" name="prom_colord" type="text" readonly class="form-control-plaintext" style="text-align:center;"/></td>
+                </tr>
+              </tbody>
+            </table>
+                      </div>
+                      <div class="col"></div>
+                  </div>
     </div>
-
-
-
-</div>
-
-
-
+        <button class="btn btn-success" type="submit">Continuar</button>
+        </form>
 {% endblock content %}
 {% block footer %}
-!-- Bootstrap core JS-->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Core theme JS-->
-<script src="static/js/scripts2.js"></script>
+<script src="static/js/datos.js"></script>
+<script>
+document.getElementById('bloque').onchange = function() {
+    var bloque_id = this.value;
+
+        $.ajax({
+        type: 'POST',
+        data: JSON.stringify({
+            'bloque_id': bloque_id
+        }),
+        dataType: "json",
+        contentType: "application/json",
+        url: "{{ url_for('get_camas') }}",
+        success: function(data) {
+            $("#cama").empty();
+            option0 = document.createElement("option");
+            optionText = document.createTextNode('Seleccionar...');
+            option0.appendChild(optionText);
+            option0.setAttribute("value", "");
+            option0.setAttribute("selected", "True");
+            option0.setAttribute("disabled", "True");
+            document.getElementById("cama").appendChild(option0);
+            for (var i = 0; i < data.length; i++) {
+                $("#cama").append('<option value="' + data[i].id + '">' + data[i].num_cama + '</option>');
+            }
+        }
+    });
+}
+
+document.getElementById('cama').onchange = function() {
+    var cama_id = this.value;
+
+        $.ajax({
+        type: 'POST',
+        data: JSON.stringify({
+            'cama_id': cama_id
+        }),
+        dataType: "json",
+        contentType: "application/json",
+        url: "{{ url_for('get_variedad') }}",
+        success: function(data) {
+        for (var i = 0; i < data.length; i++) {
+            document.getElementById('variedad').value = data[i].nombre_var;
+            document.getElementById('ciclo').value = data[i].ciclo;
+        }
+        }
+    });
+}
+</script>
 {% endblock footer %}

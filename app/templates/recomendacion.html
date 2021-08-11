@@ -4,60 +4,40 @@
         <!-- Page content-->
         <div class="container-fluid">
             <h1 class="mt-4" align="center">Recomendación</h1>
-            <p align="center">Asistente Agrícola le recomienda hoy:</p>
             <div class="container-fluid">
-            <form align="center" method="POST" action="{{ url_for('guardar_recomendacion') }}">
-                {{ form.hidden_tag() }}
-                <div align="center" class="form-group">
-                    {{ form.descrip.label(class="form-control-label") }}
-                    {% if form.descrip.errors %}
-                    {{ form.descrip(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.descrip.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
+            <form method="POST" action="{{ url_for('guardar_recomendacion') }}">
+                <div class="form-group">
+                    <label for="descrip" class="form-label">Asistente Florícola le recomienda</label>
+                    <input id="descrip" name="descrip" type="text" value="{{ rec }}" readonly class="form-control-plaintext"/>
+                </div>
+                <div class="form-group">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="de_acuerdo" id="de_acuerdo-1" value="Si" required checked>
+                      <label class="form-check-label" for="de_acuerdo-1">
+                        Si
+                      </label>
                     </div>
-                {% else %}
-
-                    <div align="center" class="col-sm-3">
-                        {{ form.descrip(class="form-control form-control-md") }}
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="de_acuerdo" id="de_acuerdo-2" value="No">
+                      <label class="form-check-label" for="de_acuerdo-2">
+                        No
+                      </label>
                     </div>
-                     {% endif %}
-                </div><br>
-                <div align="center" class="form-group">
-                    {{ form.de_acuerdo.label(class="form-control-label") }}
-                    {% if form.de_acuerdo.errors %}
-                    {{ form.de_acuerdo(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.de_acuerdo.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-
-                    <div align="center" class="col-sm-3">
-                        {{ form.de_acuerdo(class="form-control form-control-md") }}
-                    </div>
-                     {% endif %}
-                </div><br>
-                <div align="center" class="form-group">
-                    {{ form.otra_sugerencia.label(class="form-control-label") }}
-                    {% if form.otra_sugerencia.errors %}
-                    {{ form.otra_sugerencia(class="form-control form-control-md is-invalid") }}
-                    <div class="invalid-feedback">
-                        {% for error in form.otra_sugerencia.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% else %}
-
-                    <div align="center" class="col-sm-3">
-                        {{ form.otra_sugerencia(class="form-control form-control-md") }}
-                    </div>
-                     {% endif %}
-                </div><br>
-
-                <center>{{ form.guardar(class="btn btn-primary") }}</center>
+                </div>
+                <div class="form-group">
+                    <label for="otra_sugerencia">Seleccione una opcion más adecuada</label>
+                    <select class="form-control" id="otra_sugerencia" name="otra_sugerencia">
+                        <option selected disabled value="">Seleccionar...</option>
+                        <option value="0">No hacer nada</option>
+                        <option value="1">Incorporar Compost o Cambio de lugar</option>
+                        <option value="2">Drenchado,Trinchar camas o Levantar camas</option>
+                        <option value="3">Aplicar sulfato de calcio o Aplicar nitrato de calcio</option>
+                        <option value="4">Aplicar sulfato de amonio o Aplicar nitrato de amonio</option>
+                    </select>
+                </div>
+                <div class="form-group">
+						<button type="submit" class="btn btn-success">Guardar</button>
+                </div>
             </form>
 
         </div>
@@ -76,11 +56,11 @@
 $(document).ready(function() {
 $("#otra_sugerencia").hide();
 $('label[for="otra_sugerencia"]').hide();
-$("input[id$='de_acuerdo-1']").click(function() {
+$("input[id$='de_acuerdo-2']").click(function() {
   $("#otra_sugerencia").show();
   $('label[for="otra_sugerencia"]').show();
 });
-$("input[id$='de_acuerdo-0']").click(function() {
+$("input[id$='de_acuerdo-1']").click(function() {
   $("#otra_sugerencia").hide();
   $('label[for="otra_sugerencia"]').hide();
   $('#otra_sugerencia').val('');
