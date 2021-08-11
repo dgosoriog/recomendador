@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1 class="mt-4" align="center">Reporte de Mediciones</h1>
+    <form align="center" method="POST" action="{{ url_for('print_reporte_medicion') }}">
+    <div class="row">
+        <div class="col"></div>
+        <div class="col-6">
+                    <label for="buscarpor">Buscar por</label>
+                      <select class="form-control" name="buscarpor" id="buscarpor" required>
+                        <option selected disabled value="">Seleccionar...</option>
+                        <option value="0">Lote</option>
+                        <option value="1">Cama</option>
+                        <option value="2">Muestreo</option>
+                        <option value="3">Variedad</option>
+                        <option value="4">Fecha</option>
+                      </select>
+                </div>
+        <div class="col"></div>
+    </div>
+        <div class="container pt-4">
+            <div class="row">
+                <div class="col">
+        <div id="param">
+        </div>
+                    <div id="variedad" style="display: none">
+                {% for v in variedades %}
+                <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="{{ v.nombre_var }}" name="variedad" id="flexCheckChecked" checked required>
+                <label class="form-check-label" for="flexCheckChecked">
+                    {{ v.nombre_var }}
+                </label>
+                </div>
+                {% endfor %}
+            </div>
+                </div>
+                </div>
+            <div class="container pt-4">
+            <div class="row">
+                <div class="col">
+                    <button class="btn btn-success" type="submit">Imprimir</button>
+                </div>
+            </div>
+            </div>
+
+    </div>
+    </form>
+
+{% endblock content %}
+{% block footer %}
+<script type=text/javascript>
+    $(function () {
+        $("#buscarpor").change(function () {
+            $('#param').empty();
+            if ($("#variedad").is(":visible")){
+                $("#variedad").hide();
+            }
+            if ($(this).val() == "0" || $(this).val() == "1" || $(this).val() == "2") {
+                var desde = document.createElement("input");
+                desde.setAttribute("type", "number");
+                desde.setAttribute("min", "1");
+                desde.setAttribute("id", "desde");
+                desde.setAttribute("name", "desde");
+                desde.setAttribute("placeholder", "Desde N°");
+                desde.setAttribute("required", "True");
+                var hasta = document.createElement("input");
+                hasta.setAttribute("type", "number");
+                hasta.setAttribute("min", "1");
+                hasta.setAttribute("id", "hasta");
+                hasta.setAttribute("name", "hasta");
+                hasta.setAttribute("placeholder", "Hasta N°");
+                hasta.setAttribute("required", "True");
+                var labeldesde = document.createElement("label");
+                labeldesde.setAttribute("class","form-label")
+                labeldesde.setAttribute("for","desde")
+                var labelhasta = document.createElement("label");
+                labelhasta.setAttribute("class","form-label")
+                labelhasta.setAttribute("for","hasta")
+                document.getElementById("param").appendChild(labeldesde);
+                document.getElementById("param").appendChild(desde);
+                document.getElementById("param").appendChild(labelhasta);
+                document.getElementById("param").appendChild(hasta);
+            } else if ($(this).val() == "3"){
+                $("#variedad").show();
+            }
+            else {
+                $("#variedad").hide();
+                var desde = document.createElement("input");
+                    desde.setAttribute("type", "date");
+                    desde.setAttribute("id", "fechadesde");
+                    desde.setAttribute("name", "fechadesde");
+                    desde.setAttribute("required", "True");
+                    var hasta = document.createElement("input");
+                    hasta.setAttribute("type", "date");
+                    hasta.setAttribute("id", "fechahasta");
+                    hasta.setAttribute("name", "fechahasta");
+                    hasta.setAttribute("required", "True");
+                    var labeldesde = document.createElement("label");
+                    labeldesde.setAttribute("class","form-label")
+                    labeldesde.setAttribute("for","fechadesde")
+                    var labelhasta = document.createElement("label");
+                    labelhasta.setAttribute("class","form-label")
+                    labelhasta.setAttribute("for","fechahasta")
+                    document.getElementById("param").appendChild(labeldesde);
+                    document.getElementById("param").appendChild(desde);
+                    document.getElementById("param").appendChild(labelhasta);
+                    document.getElementById("param").appendChild(hasta);
+            }
+        });
+    });
+</script>
+{% endblock footer %}

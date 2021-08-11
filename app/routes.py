@@ -1,215 +1,105 @@
-from flask import render_template, url_for, flash, redirect, request, Response, session, jsonify
+from datetime import date, datetime
+from io import BytesIO
+
+from flask import render_template, url_for, flash, redirect, request, Response, session, jsonify, current_app, send_file
 from flask_login import current_user, login_user, logout_user, login_required
-from flask_security import SQLAlchemyUserDatastore, Security, utils
-
-from app import app, db, admin, bcrypt, mail
-from app.forms import LoginForm, MedicionForm, RequestResetForm, ResetPasswordForm, RecomendacionForm
-from app.admin import UserAdmin
-from app.models import Usuario, Rol, Medicion, Recomendacion
-from flask_mail import Message
-
+from sqlalchemy import and_, or_
+from app import app, db, bcrypt, mail
+from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission
+from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel
+from json import dumps
 import keras
 import numpy as np
 import pandas as pd
 from keras.models import model_from_json
-import os
-from tensorflow.keras import backend as K
-from keras.models import Sequential
-from keras.models import load_model
 from numpy import array
+from app.utils import permission_required, admin_required
 
-# main = Blueprint('main', __name__)
-cont = 0
-
-from fpdf import FPDF
-from app.funciones_adicionales import serialize
-from json import dumps
-import ast
-
-# main = Blueprint('main', __name__)
-cont = 0
-
-
-def get_model():
-    global model
-    model = load_model('recomendador.h5')
-    print('*Modelo cargado!')
-
-
-# get_model()
-
-def guardar_medicion(ph, densidad, cond_elec, fecha, Cant_arr, pro_arr, cant_arv, pro_arv, cant_gar, pro_gar, cant_len,
-                     cant_pintcolor, pro_pintcolor, cant_raycolor, pro_raycolor, cant_colordef, pro_colordef, pro_len,
-                     bloque,variedad,muestreo,ciclo,ce_compost,ph_compost,de_compost,
-                     ce_tanque,ph_tanque,ce_goteo,ph_goteo,ce_suelo,ph_suelo,ce_programac,
-                     ph_programac):
-    medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
-                        fecha=fecha, Cant_arro=Cant_arr, pro_arr=pro_arr, cant_arv=cant_arv,
-                        pro_arv=pro_arv, cant_gar=cant_gar, pro_gar=pro_gar, cant_len=cant_len,
-                        cant_pintcolor=cant_pintcolor, pro_pintcolor=pro_pintcolor,
-                        cant_raycolor=cant_raycolor, pro_raycolor=pro_raycolor, cant_colordef=cant_colordef,
-                        pro_colordef=pro_colordef, prolent=pro_len,bloque=bloque,variedad=variedad,muestreo=muestreo,ciclo=ciclo,ce_compost=ce_compost,
-                        ph_compost=ph_compost,de_compost=de_compost,ce_tanque=ce_tanque,ph_tanque=ph_tanque,ce_goteo=ce_goteo,ph_goteo=ph_goteo,ce_suelo=ce_suelo,
-                        ph_suelo=ph_suelo,ce_programac=ce_programac,ph_programac=ph_programac)
-    db.session.add(medicion)
-    db.session.commit()
-    return True
-
-
-# @app.route('/')
-# def index():
-#     if current_user.is_authenticated:
-#         return redirect(url_for('home'))
-#     return render_template('index.html')
+@app.context_processor
+def inject_permissions():
+ return dict(Permission=Permission)
 
 @app.route('/home')
 @login_required
 def home():
     return render_template('home.html')
 
+@app.route('/usuarios/nuevo', methods=['GET', 'POST'])
+def crear_usuario():
+    roles = db.session.query(Rol).all();
+    if request.method == 'POST':
+        email = request.form.get("email")
+        user = Usuario.query.filter_by(email=email).first()
+        if user:
+            flash('Ya existe un usuario con ese correo', 'warning')
+        else:
+            pwd = request.form.get("password")
+            if len(pwd) < 8:
+                flash('La contraseña debe tener como mínimo 8 caracteres', 'warning')
+            else:
+                rol = request.form.get("rol")
+                password = bcrypt.generate_password_hash(pwd).decode('utf-8')
+                usuario = Usuario(email=email, password=password, role_id=rol)
+                db.session.add(usuario)
+                db.session.commit()
+                flash('Usuario creado exitosamente','success')
+                return redirect(url_for('ver_usuarios'))
+    return render_template('crear_usuario.html',roles=roles)
 
-@app.route('/parcela')
+@app.route('/usuarios',methods=['GET','POST'])
 @login_required
-def inicio():
-    return render_template("parcela.html")
+@admin_required
+def ver_usuarios():
+    users = db.session.query(Usuario).join(Rol).all()
+    return render_template('usuarios.html', users=users)
 
-
-@app.route('/procesar', methods=['POST'])
+@app.route('/usuarios/editar/<id>',methods=['GET','POST'])
 @login_required
-def procesar():
-    arroz = request.form.get("arroz")
-    arveja = request.form.get("arveja")
-    garbanzo = request.form.get("garbanzo")
-    lenteja = request.form.get("lenteja")
-    pcolor = request.form.get("pcolor")
-    rcolor = request.form.get("rcolor")
-    colord = request.form.get("colord")
+@admin_required
+def editar_usuario(id):
+    user = Usuario.query.filter_by(id=id).first()
+    roles = db.session.query(Rol).all()
+    return render_template('editar_usuario.html',user=user, roles=roles)
 
-    return redirect(url_for('formIn', a=arroz, ar=arveja, g=garbanzo, l=lenteja, pc=pcolor, rc=rcolor, c=colord))
-
-@app.route('/procesari', methods=['GET', 'POST'])
+@app.route('/usuarios/actualizar/<id>',methods=['GET','POST'])
 @login_required
-def procesari():
-
-
-    p1 = request.form.get("pr1")
-    p2 = request.form.get("pr2")
-    p3 = request.form.get("pr3")
-    p4 = request.form.get("pr4")
-    p5 = request.form.get("pr5")
-    p6 = request.form.get("pr6")
-    p7 = request.form.get("pr7")
-    lote = request.form.get("lote")
-    variedad = request.form.get("variedad")
-    muestreo = request.form.get("muestreo")
-    ciclo = request.form.get("ciclo")
-
-    return redirect(url_for('ingresar_datos', p1=p1,p2=p2,p3=p3,p4=p4,p5=p5,p6=p6,p7=p7,l=lote,v=variedad,m=muestreo,c=ciclo))
-
-@app.route("/formIn", methods=['GET', 'POST'])
-@login_required
-def formIn():
-    ar = (int)(request.args.get("a"))
-    arv = (int)(request.args.get("ar"))
-    ga = (int)(request.args.get("g"))
-    len = (int)(request.args.get("l"))
-    pco = (int)(request.args.get("pc"))
-    rco = (int)(request.args.get("rc"))
-    co = (int)(request.args.get("c"))
-    session['ar'] = ar
-    session['arv'] = arv
-    session['ga'] = ga
-    session['len'] = len
-    session['pco'] = pco
-    session['rco'] = rco
-    session['co'] = co
-    p1 = request.form.get("pr1")
-    p2 = request.form.get("pr2")
-    p3 = request.form.get("pr3")
-    p4 = request.form.get("pr4")
-    p5 = request.form.get("pr5")
-    p6 = request.form.get("pr6")
-    p7 = request.form.get("pr7")
-
-    return render_template('formIn.html', es1=ar, es2=arv, es3=ga, es4=len, es5=pco, es6=rco, es7=co)
-
-
-@app.route("/ingresar_datos", methods=['GET', 'POST'])
-@login_required
-def ingresar_datos():
-    ar = session.get('ar')
-    arv = session.get('arv')
-    ga = session.get('ga')
-    len = session.get('len')
-    pco = session.get('pco')
-    rco = session.get('rco')
-    co = session.get('co')
-    form = MedicionForm()
-    if form.validate_on_submit():
-        d1 = (float)(request.args.get("p1"))
-        d2 = (float)(request.args.get("p2"))
-        d3 = (float)(request.args.get("p3"))
-        d4 = (float)(request.args.get("p4"))
-        d5 = (float)(request.args.get("p5"))
-        d6 = (float)(request.args.get("p6"))
-        d7 = (float)(request.args.get("p7"))
-        d8 = (float)(request.args.get("l"))
-        d9 = (float)(request.args.get("v"))
-        d10 =(float)(request.args.get("m"))
-        d11 =(float)(request.args.get("c"))
-        d12 = request.form.get("cec")
-        d13 = request.form.get("phc")
-        d14 = request.form.get("dec")
-        d15 = request.form.get("cet")
-        d16 = request.form.get("pht")
-        d17 = request.form.get("ceg")
-        d18 = request.form.get("phg")
-        d19 = request.form.get("ces")
-        d20 = request.form.get("phs")
-        d21 = request.form.get("cep")
-        d22 = request.form.get("php")
-
-        ph = form.ph.data
-        densidad = form.densidad.data
-        cond_elec = form.cond_elect.data
-        fecha = form.fecha.data
-        medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
-                            fecha=fecha, Cant_arro=ar, pro_arr=d1, cant_arv=arv,
-                        pro_arv=d2, cant_gar=ga, pro_gar=d4, cant_len=len,
-                        cant_pintcolor=pco, pro_pintcolor=d5,
-                        cant_raycolor=rco, pro_raycolor=d6, cant_colordef=co,
-                        pro_colordef=d7, prolent=d3,bloque=d8,variedad=d9,muestreo=d10,
-                            ciclo=d11,ce_compost=d12,ph_compost=d13,de_compost=d14,
-                            ce_tanque=d15,ph_tanque=d16,ce_goteo=d17,ph_goteo=d18,
-                            ce_suelo=d19,ph_suelo=d20,ce_programac=d21,ph_programac=d22)
-        db.session.add(medicion)
+@admin_required
+def actualizar_usuario(id):
+    if request.method == 'POST':
+        email = request.form.get("email")
+        rol = request.form.get("rol")
+        db.session.query(Usuario).filter(Usuario.id == id).update({Usuario.email: email, Usuario.role_id: rol})
         db.session.commit()
-        id = medicion.id
-        session['id_med'] = id
-        print('MEDICION', medicion.id)
-        return redirect(url_for('get_recomendacion'))
-    return render_template('ingreso_datos.html', form=form, es1=ar, es2=arv, es3=ga, es4=len, es5=pco, es6=rco, es7=co)
+        flash('Usuario modificado correctamente','success')
+        return redirect(url_for('ver_usuarios'))
 
+@app.route('/usuarios/eliminar/<id>',methods=['GET','POST'])
+@login_required
+@admin_required
+def eliminar_usuario(id):
+    obj = db.session.query(Usuario).filter(Usuario.id == id).first()
+    db.session.delete(obj)
+    db.session.commit()
+    flash('Usuario eliminado','success')
+    return redirect(url_for('ver_usuarios'))
 
-@app.route("/", methods=['GET', 'POST'])
+@app.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = Usuario.query.filter_by(email=form.email.data).first()
-        if user and utils.verify_password(form.password.data, user.password):
-            login_user(user, remember=form.remember.data)
-            # next_page = request.args.get('next')
-            if user.has_role('admin'):
-                return redirect(url_for('admin.home_admin'))
-            elif user.has_role('tecnico'):
-                return redirect(url_for('home'))
-                # return redirect(next_page) if next_page else redirect(url_for('home'))
+    if request.method == 'POST':
+        email = request.form.get("email")
+        password = request.form.get("password")
+        user = Usuario.query.filter_by(email=email).first()
+        if user and bcrypt.check_password_hash(user.password,password):
+            login_user(user)
+            return redirect(url_for('home'))
         else:
             flash('Error al acceder. Por favor verifique su email y/o contraseña', 'danger')
-    return render_template('login.html', form=form)
+    return render_template('login.html')
 
+# user_datastore = SQLAlchemyUserDatastore(db,Usuario,Rol)
+# security = Security(app,user_datastore)
 
 @app.route("/logout")
 def logout():
@@ -218,17 +108,208 @@ def logout():
     session.pop('busqueda_recomendaciones', None)
     session.pop('fecha_inicio', None)
     session.pop('fecha_fin', None)
+    if session.get('datos1'):
+         session.pop('datos1', None)
     return redirect(url_for('login'))
 
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    if request.method == 'POST':
+        email = request.form.get("email")
+        user = Usuario.query.filter_by(email=email).first()
+        if user is None:
+            flash('No existe una cuenta con ese email. Solicite su registro al administrador.','warning')
+        else:
+            send_reset_email(user)
+            flash('Se ha enviado un email con instrucciones para reestablecer su contraseña.', 'info')
+            return redirect(url_for('login'))
+    return render_template('reset_request.html')
 
-admin.add_view(UserAdmin(Usuario, db.session))
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = Usuario.verify_reset_token(token)
+    if user is None:
+        flash('El token es inválido o ha expirado', 'warning')
+        return redirect(url_for('reset_request'))
+    if request.method == 'POST':
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+        if password != confirm_password:
+            flash('¡Las contraseñas no coinciden!','warning')
+        else:
+            hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+            user.password = hashed_password
+            db.session.commit()
+            flash('Su contraseña ha sido cambiada. Ahora puede iniciar sesión', 'success')
+            return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reestablecer Contraseña')
 
+
+# @security.context_processor
+# def security_context_processor():
+#     return dict(
+#         admin_base_template=admin.base_template,
+#         admin_view=admin.index_view,
+#         get_url=url_for
+#     )
+
+
+# @app.before_first_request
+# def before_first_request():
+#     # Create any database tables that don't exist yet.
+#     db.create_all()
+#
+#     # Create the Roles "admin" and "end-user" -- unless they already exist
+#     user_datastore.find_or_create_role(name='admin', descripcion='Administrador')
+#     user_datastore.find_or_create_role(name='tecnico', descripcion='Tecnico Agricola')
+#
+#     # Create two Users for testing purposes -- unless they already exists.
+#     # In each case, use Flask-Security utility function to encrypt the password.
+#     encrypted_password_admin = utils.hash_password('admin')
+#     encrypted_password_tecnico = utils.hash_password('tecnico')
+#     if not user_datastore.get_user('tecnico@example.com'):
+#         user_datastore.create_user(email='tecnico@example.com', password=encrypted_password_tecnico)
+#     if not user_datastore.get_user('admin@example.com'):
+#         user_datastore.create_user(email='admin@example.com', password=encrypted_password_admin)
+#
+#     # Commit any database changes; the User and Roles must exist before we can add a Role to the User
+#     db.session.commit()
+#
+#     # Give one User has the "end-user" role, while the other has the "admin" role. (This will have no effect if the
+#     # Users already have these Roles.) Again, commit any database changes.
+#     user_datastore.add_role_to_user('tecnico@example.com', 'tecnico')
+#     user_datastore.add_role_to_user('admin@example.com', 'admin')
+#     db.session.commit()
+
+@app.route('/medicionform1')
+@login_required
+def medicionform1():
+    bloques = db.session.query(Bloque).all();
+    hoy = date.today()
+    return render_template("parcela.html",bloques=bloques, hoy=hoy, Permission=Permission)
+
+@app.route('/getcamas', methods=['POST'])
+@login_required
+def get_camas():
+    req = request.json
+    print('REQ',req)
+    bloque_id = req['bloque_id']
+    serialized_labels = [
+        serialize(row)
+        for row in db.session.query(Cama).join(Bloque).filter(Bloque.id == int(bloque_id))
+    ]
+    camas = dumps(serialized_labels)
+    print('CAMAS',camas)
+    return camas
+
+@app.route('/getvariedad', methods=['POST'])
+@login_required
+def get_variedad():
+    req = request.json
+    print('REQ',req)
+    cama_id = req['cama_id']
+    serialized_labels = [
+        serialize(row)
+        for row in db.session.query(Variedad).join(Cama).filter(Cama.id == int(cama_id))
+    ]
+    variedad = dumps(serialized_labels)
+    print('VARIEDAD',variedad)
+    print('TIPO',type(variedad))
+    return variedad
+
+@app.route('/procesarform1', methods=['POST'])
+@login_required
+def procesarform1():
+    #if isinstance(request.form.get("fechamed"), str):
+    #    fecha_med = datetime.strptime(request.form.get("fechamed"), "%Y-%m-%d").date()
+    fecha_med = datetime.strptime(request.form.get("fechamed"), "%Y-%m-%d")
+    if fecha_med.date() > date.today():
+        flash('La fecha de la medicion no puede ser mayor a la fecha de hoy', 'warning')
+        return redirect(url_for('medicionform1'))
+    else:
+        cama_id = request.form.get("cama")
+        muestreo = request.form.get("muestreo")
+        query = db.session.query(Medicion).filter(and_(Medicion.cama_id == int(cama_id),or_(Medicion.muestreo == int(muestreo), Medicion.fecha == fecha_med)))
+        print('Q',query.count())
+        if query.count() == 0:
+            arroz = request.form.get("arroz")
+            arveja = request.form.get("arveja")
+            garbanzo = request.form.get("garbanzo")
+            lenteja = request.form.get("lenteja")
+            pcolor = request.form.get("pcolor")
+            rcolor = request.form.get("rcolor")
+            colord = request.form.get("colord")
+            prom_arroz = request.form.get("prom_arroz") if request.form.get("prom_arroz") else None
+            prom_arveja = request.form.get("prom_arveja") if request.form.get("prom_arveja") else None
+            prom_garbanzo = request.form.get("prom_garb") if request.form.get("prom_garb") else None
+            prom_lenteja = request.form.get("prom_lenteja") if request.form.get("prom_lenteja") else None
+            prom_pcolor = request.form.get("prom_pcolor") if request.form.get("prom_pcolor") else None
+            prom_rcolor = request.form.get("prom_rcolor") if request.form.get("prom_rcolor") else None
+            prom_colord = request.form.get("prom_colord") if request.form.get("prom_colord") else None
+            session['datos1'] = {'arroz':arroz,"prom_arroz":prom_arroz,"arveja":arveja,"prom_arveja":prom_arveja,
+                                "garbanzo":garbanzo,"prom_garbanzo":prom_garbanzo,"lenteja":lenteja,"prom_lenteja":prom_lenteja,
+                                "pcolor":pcolor,"prom_pcolor":prom_pcolor,"rcolor":rcolor,"prom_rcolor":prom_rcolor,
+                                "colord":colord,"prom_colord":prom_colord,"muestreo":muestreo,"fecha_med":fecha_med,'cama_id':cama_id}
+            print(session['datos1'])
+            return redirect(url_for('medicionform2'))
+        else:
+            flash('Ya existe una medición realizada en esa fecha', 'danger')
+            return redirect(url_for('medicionform1'))
+
+@app.route("/medicionform2")
+@login_required
+def medicionform2():
+    if session.get('datos1') == None:
+        return redirect(url_for('medicionform1'))
+    else:
+        #fecha = session.get('datos1')['fecha_med']
+        fecha = session.get('datos1')['fecha_med'].strftime("%d/%m/%Y")
+        #fecha = datetime.strptime(session.get('datos1')['fecha_med'], "%Y-%m-%d").date()
+    return render_template('ingreso_datos.html',fecha=fecha)
+
+@app.route("/ingresar_datos", methods=['GET', 'POST'])
+@login_required
+def ingresar_datos():
+    if request.method == 'POST':
+        d12 = request.form.get("cec") if request.form.get("cec") else None
+        d13 = request.form.get("phc") if request.form.get("phc") else None
+        d14 = request.form.get("dec") if request.form.get("dec") else None
+        d15 = request.form.get("cet") if request.form.get("cet") else None
+        d16 = request.form.get("pht") if request.form.get("pht") else None
+        d17 = request.form.get("ceg") if request.form.get("ceg") else None
+        d18 = request.form.get("phg") if request.form.get("phg") else None
+        d21 = request.form.get("cep") if request.form.get("cep") else None
+        d22 = request.form.get("php") if request.form.get("php") else None
+        ph = request.form.get("ph")
+        densidad = request.form.get("densidad")
+        cond_elec = request.form.get("ce")
+        datosf1 = session.get('datos1')
+        medicion = Medicion(ph=ph, densidad=densidad, cond_elec=cond_elec,
+                        fecha=datosf1['fecha_med'], cant_arr=datosf1['arroz'], pro_arr=datosf1['prom_arroz'], cant_arv=datosf1['arveja'],
+                        pro_arv=datosf1['prom_arveja'], cant_gar=datosf1['garbanzo'], pro_gar=datosf1['prom_garbanzo'], cant_len=datosf1['lenteja'],
+                        prolent=datosf1['prom_lenteja'],cant_pintcolor=datosf1['pcolor'], pro_pintcolor=datosf1['prom_pcolor'],
+                        cant_raycolor=datosf1['rcolor'], pro_raycolor=datosf1['prom_rcolor'], cant_colordef=datosf1['colord'],
+                        pro_colordef=datosf1['prom_colord'],muestreo=datosf1['muestreo'],ce_compost=d12,ph_compost=d13,de_compost=d14,
+                        ce_tanque=d15,ph_tanque=d16,ce_goteo=d17,ph_goteo=d18,ce_programac=d21,ph_programac=d22,cama_id=datosf1['cama_id'])
+        db.session.add(medicion)
+        db.session.commit()
+        count_med = db.session.query(Medicion).count()
+        session.pop('datos1', None)
+        if count_med <= 10:
+            flash('La medicion fue guardada exitosamente. Por favor ingrese %2d mediciones para obtener una recomendacion'%(11-count_med),'success')
+            return redirect(url_for('medicionform1'))
+        else:
+            session['id_med'] = medicion.id
+            return redirect(url_for('get_recomendacion'))
+    return render_template('ingreso_datos.html')
 
 @app.route("/get_recomendacion")
+@login_required
 def get_recomendacion():
-    form = RecomendacionForm()
-    dgarbanzo = request.args.get("d")
-    print("ddd", dgarbanzo)
     ph = db.session.query(Medicion.ph).all();
     ph = pd.DataFrame(ph, columns=['Name'])
     datosph = ph.values.astype('float32')
@@ -251,7 +332,7 @@ def get_recomendacion():
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
     # cargar pesos al nuevo modelo
-    loaded_model.load_weights("app/static/modelo/recomendador.h5")
+    loaded_model.load_weights("app/static/modelo/app.h5")
     print("Cargado modelo desde disco.")
 
     # Compilar modelo cargado y listo para usar.
@@ -307,7 +388,7 @@ def get_recomendacion():
     print(answer)
 
     if answer == 1:
-        print("Se Recomienda: Incorporar Composto o Cambio de lugar")
+        print("Se Recomienda: Incorporar Compost o Cambio de lugar")
         recomen = "Incorporar Composto o Cambio de lugar"
     elif answer == 2:
         print("Se Recomienda: Drenchado,Trinchar camas o Levantar camas")
@@ -318,116 +399,115 @@ def get_recomendacion():
     elif answer == 4:
         print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
         recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
-    form.descrip.data = recomen
-    return render_template('recomendacion.html', form=form)
+    return render_template('recomendacion.html',rec=recomen)
 
 
 @app.route("/guardar_recomendacion", methods=['GET', 'POST'])
 @login_required
 def guardar_recomendacion():
-    form = RecomendacionForm()
-    if form.validate_on_submit():
-        descrip = form.descrip.data
-        de_acuerdo = form.de_acuerdo.data
-        otra_sugerencia = form.otra_sugerencia.data
+    if request.method=='POST':
+        descrip = request.form.get("descrip")
+        de_acuerdo = request.form.get("de_acuerdo")
+        otra_sugerencia = request.form.get("otra_sugerencia")
         recomendacion = Recomendacion(descrip=descrip, de_acuerdo=de_acuerdo, otra_sugerencia=otra_sugerencia,
                                       medicion_id=session.get('id_med'))
         db.session.add(recomendacion)
         db.session.commit()
         print('ID-------->', session.get('id_med'))
-        return redirect(url_for('home'))
-    return render_template('recomendacion.html', form=form)
+        return redirect(url_for('medicionform1'))
+    return render_template('recomendacion.html')
 
+@app.route('/reportemedicion', methods=['GET', 'POST'])
+@login_required
+def reporte_medicion():
+    variedades = db.session.query(Variedad).all()
+    return render_template('reporte_mediciones.html',variedades=variedades)
 
-def send_reset_email(user):
-    token = user.get_reset_token()
-    msg = Message('Solicitud para reestablecer contraseña',
-                  sender='oso95d@gmail.com',
-                  recipients=[user.email])
-    msg.body = f'''Para reestablecer tu contraseña, visita el siguiente link:
-{url_for('reset_token', token=token, _external=True)}
-Si no hiciste esta solicitud simplemente ignora este correo y no se hará ningún cambio.
-'''
-    mail.send(msg)
-
-
-@app.route("/reset_password", methods=['GET', 'POST'])
-def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('home'))
-    form = RequestResetForm()
-    if form.validate_on_submit():
-        user = Usuario.query.filter_by(email=form.email.data).first()
-        send_reset_email(user)
-        flash('Se ha enviado un email con instrucciones para reestablecer su contraseña.', 'info')
-        return redirect(url_for('login'))
-    return render_template('reset_request.html', form=form)
-
-
-@app.route("/reset_password/<token>", methods=['GET', 'POST'])
-def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('home'))
-    user = Usuario.verify_reset_token(token)
-    if user is None:
-        flash('El token es inválido o ha expirado', 'warning')
-        return redirect(url_for('reset_request'))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
-        user.password = hashed_password
-        db.session.commit()
-        flash('Su contraseña ha sido cambiada! Ahora puede iniciar sesión', 'success')
-        return redirect(url_for('login'))
-    return render_template('reset_token.html', title='Reset Password', form=form)
-
-
-# Setup Flask-Security
-user_datastore = SQLAlchemyUserDatastore(db, Usuario, Rol)
-security = Security(app, user_datastore)
-
-
-@security.context_processor
-def security_context_processor():
-    return dict(
-        admin_base_template=admin.base_template,
-        admin_view=admin.index_view,
-        get_url=url_for
-    )
-
-
-@app.before_first_request
-def before_first_request():
-    # Create any database tables that don't exist yet.
-    db.create_all()
-
-    # Create the Roles "admin" and "end-user" -- unless they already exist
-    user_datastore.find_or_create_role(name='admin', descripcion='Administrador')
-    user_datastore.find_or_create_role(name='tecnico', descripcion='Tecnico Agricola')
-
-    # Create two Users for testing purposes -- unless they already exists.
-    # In each case, use Flask-Security utility function to encrypt the password.
-    encrypted_password_admin = utils.hash_password('admin')
-    encrypted_password_tecnico = utils.hash_password('tecnico')
-    if not user_datastore.get_user('tecnico@example.com'):
-        user_datastore.create_user(email='tecnico@example.com', password=encrypted_password_tecnico)
-    if not user_datastore.get_user('admin@example.com'):
-        user_datastore.create_user(email='admin@example.com', password=encrypted_password_admin)
-
-    # Commit any database changes; the User and Roles must exist before we can add a Role to the User
-    db.session.commit()
-
-    # Give one User has the "end-user" role, while the other has the "admin" role. (This will have no effect if the
-    # Users already have these Roles.) Again, commit any database changes.
-    user_datastore.add_role_to_user('tecnico@example.com', 'tecnico')
-    user_datastore.add_role_to_user('admin@example.com', 'admin')
-    db.session.commit()
-
+@app.route('/imprimirmed', methods=['GET','POST'])
+@login_required
+def print_reporte_medicion():
+    if request.method == 'POST':
+        busqueda = []
+        results = []
+        print(request.form.get('buscarpor'))
+        if request.form.get('buscarpor') == '0' or request.form.get('buscarpor') == '1' or request.form.get('buscarpor') == '2':
+            desde = request.form.get('desde')
+            hasta = request.form.get('hasta')
+            if desde > hasta:
+                flash('El numero Desde no puede ser mayor al numero Hasta','warning')
+            else:
+                if request.form.get('buscarpor') == '0':
+                    busqueda = db.session.query(Medicion).join(Cama).join(Bloque).filter(Bloque.num_bloque>= int(desde),Bloque.num_bloque<= int(hasta))
+                elif request.form.get('buscarpor') == '1':
+                    busqueda = db.session.query(Medicion).join(Cama).filter(Cama.num_cama >= int(desde),
+                                                                                         Cama.num_cama <= int(hasta))
+                elif request.form.get('buscarpor') == '2':
+                    busqueda = db.session.query(Medicion).filter(Medicion.muestreo >= int(desde),
+                                                                            Medicion.muestreo <= int(hasta))
+        elif request.form.get('buscarpor') == '3':
+                variedades = request.form.getlist('variedad')
+                busqueda = db.session.query(Medicion).join(Cama).join(Variedad).filter(Variedad.nombre_var.in_(variedades))
+                print('VARIEDADES', variedades)
+        else:
+            fecha_desde = request.form.get('fechadesde')
+            fecha_hasta = request.form.get('fechahasta')
+            if fecha_desde > fecha_hasta:
+                flash('La fecha Desde no puede ser mayor a la fecha Hasta','warning')
+            else:
+                busqueda = db.session.query(Medicion).filter(Medicion.fecha <= fecha_hasta,
+                                                                         Medicion.fecha >= fecha_desde).all()
+        if busqueda:
+            for item in busqueda:
+                r = []
+                r.append(item.fecha.strftime("%d/%m/%Y"))
+                r.append(item.medcama.cama.num_bloque)
+                r.append(item.muestreo)
+                r.append(item.medcama.camav.nombre_var)
+                r.append(item.medcama.num_cama)
+                r.append(item.ph)
+                r.append(item.densidad)
+                r.append(item.cond_elec)
+                r.append(item.ph_compost)
+                r.append(item.de_compost)
+                r.append(item.ce_compost)
+                r.append(item.ph_tanque)
+                r.append(item.ce_tanque)
+                r.append(item.ph_goteo)
+                r.append(item.ce_goteo)
+                r.append(item.ph_programac)
+                r.append(item.ce_programac)
+                r.append(item.cant_arr)
+                r.append(item.pro_arr)
+                r.append(item.cant_arv)
+                r.append(item.pro_arv)
+                r.append(item.cant_gar)
+                r.append(item.pro_gar)
+                r.append(item.cant_len)
+                r.append(item.prolent)
+                r.append(item.cant_pintcolor)
+                r.append(item.pro_pintcolor)
+                r.append(item.cant_raycolor)
+                r.append(item.pro_raycolor)
+                r.append(item.cant_colordef)
+                r.append(item.pro_colordef)
+                results.append(r)
+            print('Results', results)
+            m2e = MedicionesToExcel(results)
+            file_stream = BytesIO()
+            m2e.save(file_stream)
+            file_stream.seek(0)
+        else:
+            flash('No existen resultados','warning')
+            return redirect(url_for('reporte_medicion'))
+        return send_file(file_stream, attachment_filename="Mediciones.xls", as_attachment=True)
 
 @app.route('/historial', methods=['GET', 'POST'])
 @login_required
 def buscar_recomendaciones():
+    if session.get('busqueda_recomendaciones'):
+        session.pop('busqueda_recomendaciones',None)
     recs = []
+    results = []
     fecha_inicio = request.args.get('desde')
     fecha_fin = request.args.get('hasta')
     if fecha_inicio and fecha_fin:
@@ -436,71 +516,74 @@ def buscar_recomendaciones():
         else:
             recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,
                                                                          Medicion.fecha >= fecha_inicio).all()
-        # print('RECs',recs)
-        serialized_labels = [
-            serialize(row)
-            for row in db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_fin,
-                                                                             Medicion.fecha >= fecha_inicio).all()
-        ]
-        recomendaciones = dumps(serialized_labels)
-        print('RECOMENDACIONES', recomendaciones)
-        session['busqueda_recomendaciones'] = recomendaciones
-        session['fecha_inicio'] = fecha_inicio
-        session['fecha_fin'] = fecha_fin
-        # session.pop('logged_in', None)
-        # recs = Recomendacion.query.filter(Recomendacion.medicion.fecha <= fecha_fin, Recomendacion.medicion_id.fecha >= fecha_inicio).all()
-    return render_template('historial.html', recs=recs)
-
-
-class PDF(FPDF):
-    def header(self):
-        # Logo
-        self.image('app/static/images/hoja.png', 10, 8, 20)
-        # helvetica bold 15
-        self.set_font('helvetica', 'B', 15)
-        self.page_width = self.w - 2 * self.l_margin
-        # Title
-        self.cell(self.page_width, 0.0, 'Reporte de Recomendaciones', align='C')
-        # Line break
-        # self.ln(20)
-
-    # Page footer
-    def footer(self):
-        # Position at 1.5 cm from bottom
-        self.set_y(-15)
-        # helvetica italic 8
-        self.set_font('helvetica', 'I', 8)
-        # Page number
-        self.cell(0, 10, 'Page ' + str(self.page_no()) + '/{nb}', 0, 0, 'C')
-
+        if recs:
+            for row in recs:
+                r = {}
+                r['n'] = row.id
+                r['recomendacion'] = row.descrip
+                r['de_acuerdo'] = row.de_acuerdo
+                r['otra_sugerencia'] = row.otra_sugerencia
+                r['fecha'] = row.medicion.fecha
+                results.append(r)
+            print('RECos',results)
+            session['busqueda_recomendaciones'] = results
+            session['fecha_inicio'] = fecha_inicio
+            session['fecha_fin'] = fecha_fin
+        else:
+            flash('No existen resultados', 'warning')
+    return render_template('historial_recomendaciones.html', recs=recs)
 
 @app.route('/imprimir')
 @login_required
 def imprimir_reporte():
-    document = PDF()
-    document.alias_nb_pages()
-    document.add_page()
-    document.set_font('Times', '', 12)
-    th = document.font_size
-    col_width = document.page_width / 4
-    document.ln(6 * th)
-    document.cell(col_width / 2, th, 'Desde:', border=0)
-    document.cell(col_width / 2, th, str(session.get('fecha_inicio')), border=0)
-    document.cell(col_width / 2, th, 'Hasta:', border=0)
-    document.cell(col_width / 2, th, str(session.get('fecha_fin')), border=0)
-    document.ln(2 * th)
-    document.cell(col_width, th, 'N°', border=1)
-    document.cell(col_width, th, 'Descripción', border=1)
-    document.ln(th)
-    recos = ast.literal_eval(session.get('busqueda_recomendaciones'))
-    for i in recos:
-        document.cell(col_width, th, str(i['id']), border=1)
-        document.cell(col_width, th, i['descrip'], border=1)
+    if session.get('busqueda_recomendaciones'):
+        document = PDF(format='A4',orientation='portrait')
+        document.alias_nb_pages()
+        document.add_page()
+        th = document.font_size
+        col_width_cab = document.page_width / 4
+        document.ln(6 * th)
+        document.set_font('helvetica', 'B', 12)
+        document.cell(col_width_cab / 2, th, 'Desde:', border=0)
+        document.set_font('helvetica', '', 12)
+        document.cell(col_width_cab / 2, th, "{}".format(session.get('fecha_inicio')), border=0)
+        document.set_font('helvetica', 'B', 12)
+        document.cell(col_width_cab / 2, th, 'Hasta:', border=0)
+        document.set_font('helvetica', '', 12)
+        document.cell(col_width_cab / 2, th, "{}".format(session.get('fecha_fin')), border=0)
+        document.ln(2 * th)
+        col_width_tab = document.page_width
+        document.cell((col_width_tab*7)/100, th, 'N°', border=1)
+        document.cell((col_width_tab*33)/100, th, 'Descripción', border=1)
+        document.cell((col_width_tab*14)/100, th, 'De Acuerdo', border=1)
+        document.cell((col_width_tab*33)/100, th, 'Sugerencia', border=1)
+        document.cell((col_width_tab*13)/100, th, 'Fecha', border=1)
         document.ln(th)
-    return Response(document.output(dest='S'), mimetype='application/pdf',
-                    headers={'Content-Disposition': 'attachment;filename=recomendaciones.pdf'})
+        document.set_font('helvetica', '', 12)
+        recos = session.get('busqueda_recomendaciones')
+        #recos = ast.literal_eval(session.get('busqueda_recomendaciones'))
+        for i in recos:
+            top = document.y
+            offset = document.x + ((col_width_tab * 33) / 100)
+            document.multi_cell((col_width_tab*7)/100, 2*th, str(i['n']),1,0)
+            document.y = top
+            document.x = offset
+            document.multi_cell((col_width_tab*33)/100, 2*th, i['recomendacion'],1,0)
+            # top2 = document.y
+            offset2 = document.x + ((col_width_tab * 14) / 100)
+            document.multi_cell((col_width_tab*14)/100, 2*th, i['de_acuerdo'],1,0)
+            # document.y = top2
+            document.x = offset2
+            document.multi_cell((col_width_tab*33)/100, 2*th, i['otra_sugerencia'],1,0)
+            # top3= document.y
+            offset3 = document.x + ((col_width_tab * 13) / 100)
+            document.multi_cell((col_width_tab*13)/100, 2*th,i['fecha'],1,0)
+            # document.y = top3
+            document.x = offset3
+            document.ln(2*th)
 
-# def get_recomendaciones(fecha_desde,fecha_hasta):
-#     recs = db.session.query(Recomendacion).join(Medicion).filter(Medicion.fecha <= fecha_hasta,
-#                                                                  Medicion.fecha >= fecha_desde).all()
-#     return recs
+        return Response(document.output(dest='S'), mimetype='application/pdf',
+                    headers={'Content-Disposition': 'attachment;filename=mediciones.pdf'})
+    else:
+        flash('Realice primero una búsqueda', 'danger')
+        return redirect(url_for('buscar_recomendaciones'))

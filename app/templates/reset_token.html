@@ -30,49 +30,49 @@
 </head>
 <body>
 
-	<div class="limiter">
+<div class="limiter">
 
 		<div class="container-login100">
 
 			<div class="wrap-login100">
 				<form class="login100-form" method="post">
-					 {{ form.hidden_tag() }}
 					<fieldset class="form-group">
-					<a href="javascript:history.back()"> Volver Atrás</a>
+
 					<span class="login100-form-title p-b-34">
-						Reestablecer Contraseña
+						Reestablecer contraseña
 					</span>
 
 					<div class="form-group">
-						 {{ form.password.label(class="form-control-label") }}
-                    {% if form.password.errors %}
-                        {{ form.password(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.password.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.password(class="form-control form-control-lg") }}
-                    {% endif %}
-					</div>
-                        <div class="form-group">
-						 {{ form.confirm_password.label(class="form-control-label") }}
-                    {% if form.confirm_password.errors %}
-                        {{ form.confirm_password(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.confirm_password.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.confirm_password(class="form-control form-control-lg") }}
-                    {% endif %}
-					</div>
+						 <label for="password">Nueva Contraseña</label>
+                    <input type="password" name="password" class="form-control" id="password">
+                </div>
+						<div class="form-group">
+						 <label for="confirm_password">Confirmar Contraseña</label>
+                    <input type="password" name="confirm_password" class="form-control" id="confirm_password">
+                </div>
 					<div class="form-group">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
+						<button type="submit" class="btn btn-outline-info">Entrar</button>
+            		</div>
 						</fieldset>
+					<div class="row">
+				<div class="col-md-8">
+				  {% with messages = get_flashed_messages(with_categories=true) %}
+					{% if messages %}
+					  {% for category, message in messages %}
+						<div class="alert alert-{{ category }}">
+						  {{ message }}
+						</div>
+					  {% endfor %}
+					{% endif %}
+				  {% endwith %}
+				</div>
+				</div>
+				</form>
+
+				<div class="login100-more" style="background-image: url('static/images/fondo.png');"></div>
+			</div>
+		</div>
+	</div>
 					<div class="row">
 				<div class="col-md-8">
 				  {% with messages = get_flashed_messages(with_categories=true) %}
