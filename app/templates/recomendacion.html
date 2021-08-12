@@ -5,10 +5,13 @@
         <div class="container-fluid">
             <h1 class="mt-4" align="center">Recomendación</h1>
             <div class="container-fluid">
-            <form method="POST" action="{{ url_for('guardar_recomendacion') }}">
+                <div class="row">
+                    <div class="col"></div>
+                    <div class="col-6">
+            <form method="POST" align="center" action="{{ url_for('guardar_recomendacion') }}">
                 <div class="form-group">
                     <label for="descrip" class="form-label">Asistente Florícola le recomienda</label>
-                    <input id="descrip" name="descrip" type="text" value="{{ rec }}" readonly class="form-control-plaintext"/>
+                    <input id="descrip" name="descrip" type="text" value="{{ rec }}" readonly class="form-control-plaintext" style="text-align:center;"/>
                 </div>
                 <div class="form-group">
                     <div class="form-check">
@@ -26,20 +29,20 @@
                 </div>
                 <div class="form-group">
                     <label for="otra_sugerencia">Seleccione una opcion más adecuada</label>
-                    <select class="form-control" id="otra_sugerencia" name="otra_sugerencia">
+                      <select class="form-control" name="otra_sugerencia" id="otra_sugerencia" required>
                         <option selected disabled value="">Seleccionar...</option>
-                        <option value="0">No hacer nada</option>
-                        <option value="1">Incorporar Compost o Cambio de lugar</option>
-                        <option value="2">Drenchado,Trinchar camas o Levantar camas</option>
-                        <option value="3">Aplicar sulfato de calcio o Aplicar nitrato de calcio</option>
-                        <option value="4">Aplicar sulfato de amonio o Aplicar nitrato de amonio</option>
-                    </select>
+                          {% for v in alt %}
+                            <option value="{{ v.value }}">{{ alt[v] }}</option>
+                          {% endfor %}
+                          </select>
                 </div>
                 <div class="form-group">
 						<button type="submit" class="btn btn-success">Guardar</button>
                 </div>
             </form>
-
+        </div>
+                    <div class="col"></div>
+                </div>
         </div>
     </div>
 </div>

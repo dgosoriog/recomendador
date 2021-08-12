@@ -5,8 +5,8 @@ from flask import render_template, url_for, flash, redirect, request, Response, 
 from flask_login import current_user, login_user, logout_user, login_required
 from sqlalchemy import and_, or_
 from app import app, db, bcrypt, mail
-from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission
-from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel
+from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission, Alternativas
+from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel, alternativas_todict
 from json import dumps
 import keras
 import numpy as np
@@ -22,9 +22,16 @@ def inject_permissions():
 @app.route('/home')
 @login_required
 def home():
-    return render_template('home.html')
+    return render_template('home.html', titulo='Inicio')
+
+@app.route('/help')
+@login_required
+def ayuda():
+    return render_template('help.html', titulo='Ayuda')
 
 @app.route('/usuarios/nuevo', methods=['GET', 'POST'])
+@login_required
+@admin_required
 def crear_usuario():
     roles = db.session.query(Rol).all();
     if request.method == 'POST':
@@ -44,14 +51,14 @@ def crear_usuario():
                 db.session.commit()
                 flash('Usuario creado exitosamente','success')
                 return redirect(url_for('ver_usuarios'))
-    return render_template('crear_usuario.html',roles=roles)
+    return render_template('crear_usuario.html',roles=roles, titulo='Usuarios - Nuevo')
 
 @app.route('/usuarios',methods=['GET','POST'])
 @login_required
 @admin_required
 def ver_usuarios():
     users = db.session.query(Usuario).join(Rol).all()
-    return render_template('usuarios.html', users=users)
+    return render_template('usuarios.html', users=users, titulo='Usuarios')
 
 @app.route('/usuarios/editar/<id>',methods=['GET','POST'])
 @login_required
@@ -59,7 +66,7 @@ def ver_usuarios():
 def editar_usuario(id):
     user = Usuario.query.filter_by(id=id).first()
     roles = db.session.query(Rol).all()
-    return render_template('editar_usuario.html',user=user, roles=roles)
+    return render_template('editar_usuario.html',user=user, roles=roles, titulo='Usuarios - Editar')
 
 @app.route('/usuarios/actualizar/<id>',methods=['GET','POST'])
 @login_required
@@ -190,7 +197,7 @@ def reset_token(token):
 def medicionform1():
     bloques = db.session.query(Bloque).all();
     hoy = date.today()
-    return render_template("parcela.html",bloques=bloques, hoy=hoy, Permission=Permission)
+    return render_template("parcela.html",bloques=bloques, hoy=hoy, Permission=Permission, titulo='Medicion')
 
 @app.route('/getcamas', methods=['POST'])
 @login_required
@@ -269,7 +276,7 @@ def medicionform2():
         #fecha = session.get('datos1')['fecha_med']
         fecha = session.get('datos1')['fecha_med'].strftime("%d/%m/%Y")
         #fecha = datetime.strptime(session.get('datos1')['fecha_med'], "%Y-%m-%d").date()
-    return render_template('ingreso_datos.html',fecha=fecha)
+    return render_template('ingreso_datos.html',fecha=fecha, titulo='Medicion')
 
 @app.route("/ingresar_datos", methods=['GET', 'POST'])
 @login_required
@@ -300,12 +307,12 @@ def ingresar_datos():
         count_med = db.session.query(Medicion).count()
         session.pop('datos1', None)
         if count_med <= 10:
-            flash('La medicion fue guardada exitosamente. Por favor ingrese %2d mediciones para obtener una recomendacion'%(11-count_med),'success')
+            flash('La medicion fue guardada exitosamente. Por favor ingrese %2d mediciones más para obtener una recomendacion'%(11-count_med),'success')
             return redirect(url_for('medicionform1'))
         else:
             session['id_med'] = medicion.id
             return redirect(url_for('get_recomendacion'))
-    return render_template('ingreso_datos.html')
+    return render_template('ingreso_datos.html', titulo='Medicion')
 
 @app.route("/get_recomendacion")
 @login_required
@@ -332,7 +339,7 @@ def get_recomendacion():
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
     # cargar pesos al nuevo modelo
-    loaded_model.load_weights("app/static/modelo/app.h5")
+    loaded_model.load_weights("app/static/modelo/recomendador.h5")
     print("Cargado modelo desde disco.")
 
     # Compilar modelo cargado y listo para usar.
@@ -387,19 +394,21 @@ def get_recomendacion():
     answer = np.argmax(result)
     print(answer)
 
-    if answer == 1:
+    if answer == 0:
+        recomen = alternativas_todict()[Alternativas.A0]
+    elif answer == 1:
         print("Se Recomienda: Incorporar Compost o Cambio de lugar")
-        recomen = "Incorporar Composto o Cambio de lugar"
+        recomen = alternativas_todict()[Alternativas.A1]
     elif answer == 2:
         print("Se Recomienda: Drenchado,Trinchar camas o Levantar camas")
-        recomen = "Drenchado,Trinchar camas o Levantar camas"
+        recomen = alternativas_todict()[Alternativas.A2]
     elif answer == 3:
         print("Se Recomienda: Aplicar sulfato de calcio o Aplicar nitrato de calcio")
-        recomen = "Aplicar sulfato de calcio o Aplicar nitrato de calcio"
+        recomen = alternativas_todict()[Alternativas.A3]
     elif answer == 4:
         print("Se Recomienda: Aplicar sulfato de amonio o Aplicar nitrato de amonio")
-        recomen = "Aplicar sulfato de amonio o Aplicar nitrato de amonio"
-    return render_template('recomendacion.html',rec=recomen)
+        recomen = alternativas_todict()[Alternativas.A4]
+    return render_template('recomendacion.html',rec=recomen, alt=alternativas_todict(), titulo='Recomendacion')
 
 
 @app.route("/guardar_recomendacion", methods=['GET', 'POST'])
@@ -414,6 +423,7 @@ def guardar_recomendacion():
         db.session.add(recomendacion)
         db.session.commit()
         print('ID-------->', session.get('id_med'))
+        flash('Recomendación Guardada','success')
         return redirect(url_for('medicionform1'))
     return render_template('recomendacion.html')
 
@@ -421,7 +431,7 @@ def guardar_recomendacion():
 @login_required
 def reporte_medicion():
     variedades = db.session.query(Variedad).all()
-    return render_template('reporte_mediciones.html',variedades=variedades)
+    return render_template('reporte_mediciones.html',variedades=variedades, titulo='Reportes Mediciones')
 
 @app.route('/imprimirmed', methods=['GET','POST'])
 @login_required
@@ -504,6 +514,7 @@ def print_reporte_medicion():
 @app.route('/historial', methods=['GET', 'POST'])
 @login_required
 def buscar_recomendaciones():
+
     if session.get('busqueda_recomendaciones'):
         session.pop('busqueda_recomendaciones',None)
     recs = []
@@ -522,7 +533,18 @@ def buscar_recomendaciones():
                 r['n'] = row.id
                 r['recomendacion'] = row.descrip
                 r['de_acuerdo'] = row.de_acuerdo
-                r['otra_sugerencia'] = row.otra_sugerencia
+                print('TIPO',type(row.otra_sugerencia))
+                if row.otra_sugerencia == 0:
+                    s = alternativas_todict()[Alternativas.A0]
+                elif row.otra_sugerencia == 1:
+                    s = alternativas_todict()[Alternativas.A1]
+                elif row.otra_sugerencia == 2:
+                    s = alternativas_todict()[Alternativas.A2]
+                elif row.otra_sugerencia == 3:
+                    s = alternativas_todict()[Alternativas.A3]
+                else:
+                    s = alternativas_todict()[Alternativas.A4]
+                r['otra_sugerencia'] = s
                 r['fecha'] = row.medicion.fecha
                 results.append(r)
             print('RECos',results)
@@ -531,13 +553,13 @@ def buscar_recomendaciones():
             session['fecha_fin'] = fecha_fin
         else:
             flash('No existen resultados', 'warning')
-    return render_template('historial_recomendaciones.html', recs=recs)
+    return render_template('historial_recomendaciones.html', recs=results, titulo='Historial Recomendaciones')
 
 @app.route('/imprimir')
 @login_required
 def imprimir_reporte():
     if session.get('busqueda_recomendaciones'):
-        document = PDF(format='A4',orientation='portrait')
+        document = PDF(format='A4',orientation='L')
         document.alias_nb_pages()
         document.add_page()
         th = document.font_size
@@ -554,32 +576,33 @@ def imprimir_reporte():
         document.ln(2 * th)
         col_width_tab = document.page_width
         document.cell((col_width_tab*7)/100, th, 'N°', border=1)
-        document.cell((col_width_tab*33)/100, th, 'Descripción', border=1)
-        document.cell((col_width_tab*14)/100, th, 'De Acuerdo', border=1)
-        document.cell((col_width_tab*33)/100, th, 'Sugerencia', border=1)
-        document.cell((col_width_tab*13)/100, th, 'Fecha', border=1)
+        document.cell((col_width_tab*35)/100, th, 'Descripción', border=1)
+        document.cell((col_width_tab*10)/100, th, 'De Acuerdo', border=1)
+        document.cell((col_width_tab*34)/100, th, 'Sugerencia', border=1)
+        document.cell((col_width_tab*14)/100, th, 'Fecha', border=1)
         document.ln(th)
         document.set_font('helvetica', '', 12)
         recos = session.get('busqueda_recomendaciones')
+        print(recos)
         #recos = ast.literal_eval(session.get('busqueda_recomendaciones'))
         for i in recos:
-            top = document.y
-            offset = document.x + ((col_width_tab * 33) / 100)
-            document.multi_cell((col_width_tab*7)/100, 2*th, str(i['n']),1,0)
-            document.y = top
-            document.x = offset
-            document.multi_cell((col_width_tab*33)/100, 2*th, i['recomendacion'],1,0)
+            #top = document.y
+            #offset = document.x + ((col_width_tab * 33) / 100)
+            document.cell((col_width_tab*7)/100, 2*th, str(i['n']),1)
+            #document.y = top
+            #document.x = offset
+            document.cell((col_width_tab*37)/100, 2*th, i['recomendacion'],1)
             # top2 = document.y
-            offset2 = document.x + ((col_width_tab * 14) / 100)
-            document.multi_cell((col_width_tab*14)/100, 2*th, i['de_acuerdo'],1,0)
+            #offset2 = document.x + ((col_width_tab * 14) / 100)
+            document.cell((col_width_tab*10)/100, 2*th, i['de_acuerdo'],1)
             # document.y = top2
-            document.x = offset2
-            document.multi_cell((col_width_tab*33)/100, 2*th, i['otra_sugerencia'],1,0)
+            #document.x = offset2
+            document.cell((col_width_tab*36)/100, 2*th, i['otra_sugerencia'], 1)
             # top3= document.y
-            offset3 = document.x + ((col_width_tab * 13) / 100)
-            document.multi_cell((col_width_tab*13)/100, 2*th,i['fecha'],1,0)
+            #offset3 = document.x + ((col_width_tab * 13) / 100)
+            document.cell((col_width_tab*10)/100, 2*th,i['fecha'],1)
             # document.y = top3
-            document.x = offset3
+            #document.x = offset3
             document.ln(2*th)
 
         return Response(document.output(dest='S'), mimetype='application/pdf',

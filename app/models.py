@@ -1,4 +1,5 @@
 from datetime import date
+from enum import Enum
 
 from flask import current_app
 
@@ -17,6 +18,13 @@ class Permission:
  CONSULTAR_REC = 4
  IMPRIMIR_REPORTE = 8
  ADMIN = 16
+
+class Alternativas(Enum):
+    A0 = 0
+    A1 = 1
+    A2 = 2
+    A3 = 3
+    A4 = 4
 
 class Rol(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
@@ -153,8 +161,8 @@ class Medicion(db.Model):
 class Recomendacion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     descrip = db.Column(db.String(30), nullable=False)
-    de_acuerdo = db.Column(db.Integer, unique=False)
-    otra_sugerencia = db.Column(db.String(100),nullable=True, default='')
+    de_acuerdo = db.Column(db.String(4), unique=False)
+    otra_sugerencia = db.Column(db.Integer,nullable=True, default='')
     medicion_id = db.Column(db.Integer, db.ForeignKey('medicion.id'), unique=True)
 
     def __repr__(self):

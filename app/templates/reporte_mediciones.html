@@ -8,7 +8,7 @@
                     <label for="buscarpor">Buscar por</label>
                       <select class="form-control" name="buscarpor" id="buscarpor" required>
                         <option selected disabled value="">Seleccionar...</option>
-                        <option value="0">Lote</option>
+                        <option value="0">Bloque</option>
                         <option value="1">Cama</option>
                         <option value="2">Muestreo</option>
                         <option value="3">Variedad</option>
@@ -25,7 +25,7 @@
                     <div id="variedad" style="display: none">
                 {% for v in variedades %}
                 <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="{{ v.nombre_var }}" name="variedad" id="flexCheckChecked" checked required>
+                <input class="form-check-input" type="checkbox" value="{{ v.nombre_var }}" name="variedad" id="flexCheckChecked" checked>
                 <label class="form-check-label" for="flexCheckChecked">
                     {{ v.nombre_var }}
                 </label>

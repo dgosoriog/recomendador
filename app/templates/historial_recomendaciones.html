@@ -35,11 +35,11 @@
               <tbody>
               {% for r in recs %}
                 <tr>
-                    <td>{{ r.id }}</td>
-                    <td>{{ r.descrip }}</td>
-                    <td>{{ r.de_acuerdo }}</td>
-                    <td>{{ r.otra_sugerencia }}</td>
-                    <td>{{ r.medicion.fecha }}</td>
+                    <td>{{ r['n'] }}</td>
+                    <td>{{ r['recomendacion'] }}</td>
+                    <td>{{ r['de_acuerdo'] }}</td>
+                    <td>{{ r['otra_sugerencia'] }}</td>
+                    <td>{{ r['fecha'] }}</td>
                 </tr>
               {% endfor %}
               </tbody>

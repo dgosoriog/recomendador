@@ -7,7 +7,7 @@ from fpdf import FPDF
 from flask_mail import Message
 from flask import url_for, abort
 from app import mail
-from app.models import Permission
+from app.models import Permission, Alternativas
 import xlwt
 from datetime import datetime
 
@@ -130,6 +130,17 @@ def send_reset_email(user):
 Si no hiciste esta solicitud simplemente ignora este correo y no se hará ningún cambio.
 '''
     mail.send(msg)
+
+def alternativas_todict():
+    alt = {
+        Alternativas.A0 : 'No hacer nada',
+        Alternativas.A1 : 'Incorporar Compost o Cambio de lugar',
+        Alternativas.A2 : 'Drenchado,Trinchar camas o Levantar camas',
+        Alternativas.A3 : 'Aplicar sulfato de calcio o Aplicar nitrato de calcio',
+        Alternativas.A4 : 'Aplicar sulfato de amonio o Aplicar nitrato de amonio'
+    }
+
+    return alt
 
 def serialize(model):
   """Transforms a model into a dictionary which can be dumped to JSON."""

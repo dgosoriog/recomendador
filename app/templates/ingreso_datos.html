@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
+<h2 class="mt-4" align="center">Ingreso de Datos</h2>
             <form align="center" method="POST" action="{{url_for('ingresar_datos')}}">
                 <div class="container">
                     <div class="row">
@@ -12,10 +13,10 @@
                 <div class="col-6">
                     <div class="row">
                         <div class="col">
-                            <p align="center">Ph-Densidad-Conductividad Eléctrica</p>
+                            <p align="center">Sustrato Líquido</p>
                             <label for="ce" class="form-label">Conductividad Eléctrica</label>
                             <input id="ce" name="ce" type="number" step='0.01' class="form-control" required/>
-                            <label for="ph" class="form-label">Ph</label>
+                            <label for="ph" class="form-label">pH</label>
                             <input id="ph" name="ph" type="number" step='0.01' class="form-control" required/>
                             <label for="densidad" class="form-label">Densidad</label>
                             <input id="densidad" name="densidad" type="number" step='0.01' class="form-control" required/>
@@ -28,7 +29,7 @@
                             <p align="center">Compost</p>
                             <label for="cec" class="form-label">Conductividad Eléctrica</label>
                             <input id="cec" name="cec" type="number" step='0.01' class="form-control"/>
-                            <label for="phc" class="form-label">Ph</label>
+                            <label for="phc" class="form-label">pH</label>
                             <input id="phc" name="phc" type="number" step='0.01' class="form-control"/>
                             <label for="dec" class="form-label">Densidad</label>
                             <input id="dec" name="dec" type="number" step='0.01' class="form-control"/>
@@ -45,7 +46,7 @@
                     <input id="cet" name="cet" type="number" step='0.01' class="form-control"/>
                     </div>
                     <div class="col-sm-6">
-                    <label for="pht" class="form-label">Ph</label>
+                    <label for="pht" class="form-label">pH</label>
                     <input id="pht" name="pht" type="number" step='0.01' class="form-control"/>
                     </div>
                 </div>
@@ -58,7 +59,7 @@
                     <input id="ceg" name="ceg" type="number" step='0.01' class="form-control"/>
                     </div>
                     <div class="col-sm-6">
-                    <label for="phg" class="form-label">Ph</label>
+                    <label for="phg" class="form-label">pH</label>
                     <input id="phg" name="phg" type="number" step='0.01' class="form-control"/>
                     </div>
                 </div>
@@ -71,7 +72,7 @@
                     <input id="cep" name="cep" type="number" step='0.01' class="form-control"/>
                     </div>
                     <div class="col-sm-6">
-                    <label for="php" class="form-label">Ph</label>
+                    <label for="php" class="form-label">pH</label>
                     <input id="php" name="php" type="number" step='0.01' class="form-control"/>
                     </div>
                 </div>
