@@ -84,10 +84,15 @@ def actualizar_usuario(id):
 @login_required
 @admin_required
 def eliminar_usuario(id):
-    obj = db.session.query(Usuario).filter(Usuario.id == id).first()
-    db.session.delete(obj)
-    db.session.commit()
-    flash('Usuario eliminado','success')
+    num_users = db.session.query(Usuario).count()
+    num_admin = db.session.query(Usuario).filter(Usuario.role_id == 2).count()
+    if num_admin == 1 and num_users == 1:
+        flash('No puede eliminar más usuarios','danger')
+    else:
+        obj = db.session.query(Usuario).filter(Usuario.id == id).first()
+        db.session.delete(obj)
+        db.session.commit()
+        flash('Usuario eliminado','success')
     return redirect(url_for('ver_usuarios'))
 
 @app.route("/login", methods=['GET', 'POST'])
