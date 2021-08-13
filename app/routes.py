@@ -29,7 +29,7 @@ def home():
 def ayuda():
     return render_template('help.html', titulo='Ayuda')
 
-@app.route('/usuarios/nuevo', methods=['GET', 'POST'])
+@app.route('/nuevo', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def crear_usuario():
@@ -60,7 +60,7 @@ def ver_usuarios():
     users = db.session.query(Usuario).join(Rol).all()
     return render_template('usuarios.html', users=users, titulo='Usuarios')
 
-@app.route('/usuarios/editar/<id>',methods=['GET','POST'])
+@app.route('/editar<id>',methods=['GET','POST'])
 @login_required
 @admin_required
 def editar_usuario(id):
@@ -68,7 +68,7 @@ def editar_usuario(id):
     roles = db.session.query(Rol).all()
     return render_template('editar_usuario.html',user=user, roles=roles, titulo='Usuarios - Editar')
 
-@app.route('/usuarios/actualizar/<id>',methods=['GET','POST'])
+@app.route('/actualizar/<id>',methods=['GET','POST'])
 @login_required
 @admin_required
 def actualizar_usuario(id):
@@ -80,7 +80,7 @@ def actualizar_usuario(id):
         flash('Usuario modificado correctamente','success')
         return redirect(url_for('ver_usuarios'))
 
-@app.route('/usuarios/eliminar/<id>',methods=['GET','POST'])
+@app.route('/eliminar/<id>',methods=['GET','POST'])
 @login_required
 @admin_required
 def eliminar_usuario(id):
@@ -90,7 +90,7 @@ def eliminar_usuario(id):
     flash('Usuario eliminado','success')
     return redirect(url_for('ver_usuarios'))
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
