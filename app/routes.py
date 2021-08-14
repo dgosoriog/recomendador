@@ -14,10 +14,16 @@ import pandas as pd
 from keras.models import model_from_json
 from numpy import array
 from app.utils import permission_required, admin_required
+from datetime import timedelta
 
 @app.context_processor
 def inject_permissions():
  return dict(Permission=Permission)
+
+@app.before_request
+def before_request():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=5)
 
 @app.route('/home')
 @login_required

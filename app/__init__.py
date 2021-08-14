@@ -14,6 +14,11 @@ mail = Mail(app)
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login = LoginManager(app)
+login.login_view = 'login'
+login.refresh_view = 'relogin'
+login.needs_refresh_message = (u"La sesión ha expirado, por favor vuelva a iniciar sesión")
+login.needs_refresh_message_category = "info"
+
 # class AdminView(ModelView):
 #     #@expose('/')
 #     def is_accessible(self):
