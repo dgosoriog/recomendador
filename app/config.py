@@ -3,11 +3,11 @@ import os
 class Config:
     #SECRET_KEY = os.environ.get('SECRET_KEY')
     SECRET_KEY = b'3\x0f\x85\xb6\xf8M4P\x8e\xedA\xb8\xf0\xd5#\t'
-    #SQLALCHEMY_DATABASE_URI = 'sqlite:///baseaf.db'
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{user}:{password}@{server}/{database}'.format(user='root',
-                                                                                        password='',
-                                                                                        server='localhost',
-                                                                                        database='baseaf')
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///baseaf.db'
+    #SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://{user}:{password}@{server}/{database}'.format(user='root',
+                                                                                        #password='',
+                                                                                        #server='localhost',
+                                                                                        #database='baseaf')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
