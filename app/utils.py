@@ -48,6 +48,7 @@ def MedicionesToExcel(lista):
                     "Prom. Pintando Color",
                     "Cant. Color Def",
                     "Prom. Color Def",
+                    "Usuario"
                     ]
     c = 0
     for columna in columnas:

@@ -3,10 +3,12 @@
     <h1 class="mt-4" align="center">Usuarios</h1>
     <div class="row">
         <div class="col"></div>
-        <div class="col-8">
+        <div class="col-10">
         <table class="table table-success table-striped">
             <thead>
             <tr>
+                <th scope="col">Nombre</th>
+                <th scope="col">Apellido</th>
                 <th scope="col">Correo</th>
                 <th scope="col">Rol</th>
                 <th scope="col">Acciones</th>
@@ -15,8 +17,10 @@
               <tbody>
               {% for r in users %}
                 <tr>
+                    <td>{{ r.nombre }}</td>
+                    <td>{{ r.apellido }}</td>
                     <td>{{ r.email }}</td>
-                    <td>{{ r.role.name }}</td>
+                    <td>{{ r.role.nombre }}</td>
                     <td>
                         <a class="btn btn-primary" href="/editar{{ r.id }}" role="button">Editar</a>
                         <a class="btn btn-danger btn-delete" href="/eliminar/{{ r.id }}" role="button">Eliminar</a>

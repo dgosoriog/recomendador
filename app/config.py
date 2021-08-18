@@ -14,7 +14,7 @@ class Config:
     MAIL_USE_TLS = True
     MAIL_USERNAME = 'floricolaasistente5@gmail.com'
     MAIL_PASSWORD = 'MO2021818'
-    AF_ADMIN = 'oso95d@gmail.com'
+    #AF_ADMIN = 'oso95d@gmail.com'
 #     @staticmethod
 #     def init_app(app):
 #         pass

@@ -4,6 +4,8 @@ from io import BytesIO
 from flask import render_template, url_for, flash, redirect, request, Response, session, jsonify, current_app, send_file
 from flask_login import current_user, login_user, logout_user, login_required
 from sqlalchemy import and_, or_
+from sqlalchemy.orm import load_only
+
 from app import app, db, bcrypt, mail
 from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission, Alternativas
 from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel, alternativas_todict
@@ -36,11 +38,13 @@ def ayuda():
     return render_template('help.html', titulo='Ayuda')
 
 @app.route('/nuevo', methods=['GET', 'POST'])
-@login_required
-@admin_required
+#@login_required
+#@admin_required
 def crear_usuario():
     roles = db.session.query(Rol).all();
     if request.method == 'POST':
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("ape")
         email = request.form.get("email")
         user = Usuario.query.filter_by(email=email).first()
         if user:
@@ -52,7 +56,7 @@ def crear_usuario():
             else:
                 rol = request.form.get("rol")
                 password = bcrypt.generate_password_hash(pwd).decode('utf-8')
-                usuario = Usuario(email=email, password=password, role_id=rol)
+                usuario = Usuario(nombre=nombre, apellido=apellido, email=email, password=password, role_id=rol)
                 db.session.add(usuario)
                 db.session.commit()
                 flash('Usuario creado exitosamente','success')
@@ -60,15 +64,15 @@ def crear_usuario():
     return render_template('crear_usuario.html',roles=roles, titulo='Usuarios - Nuevo')
 
 @app.route('/usuarios',methods=['GET','POST'])
-@login_required
-@admin_required
+#@login_required
+#@admin_required
 def ver_usuarios():
     users = db.session.query(Usuario).join(Rol).all()
     return render_template('usuarios.html', users=users, titulo='Usuarios')
 
 @app.route('/editar<id>',methods=['GET','POST'])
-@login_required
-@admin_required
+#@login_required
+#@admin_required
 def editar_usuario(id):
     user = Usuario.query.filter_by(id=id).first()
     roles = db.session.query(Rol).all()
@@ -79,9 +83,11 @@ def editar_usuario(id):
 @admin_required
 def actualizar_usuario(id):
     if request.method == 'POST':
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("ape")
         email = request.form.get("email")
         rol = request.form.get("rol")
-        db.session.query(Usuario).filter(Usuario.id == id).update({Usuario.email: email, Usuario.role_id: rol})
+        db.session.query(Usuario).filter(Usuario.id == id).update({Usuario.nombre: nombre, Usuario.apellido: apellido, Usuario.email: email, Usuario.role_id: rol})
         db.session.commit()
         flash('Usuario modificado correctamente','success')
         return redirect(url_for('ver_usuarios'))
@@ -111,6 +117,9 @@ def login():
         user = Usuario.query.filter_by(email=email).first()
         if user and bcrypt.check_password_hash(user.password,password):
             login_user(user)
+            session['user_id'] = user.id
+            #print('ID',Usuario.get_id(user))
+            #print('TIPO', type(Usuario.get_id(user)))
             return redirect(url_for('home'))
         else:
             flash('Error al acceder. Por favor verifique su email y/o contraseña', 'danger')
@@ -204,14 +213,14 @@ def reset_token(token):
 #     db.session.commit()
 
 @app.route('/medicionform1')
-@login_required
+#@login_required
 def medicionform1():
     bloques = db.session.query(Bloque).all();
     hoy = date.today()
     return render_template("parcela.html",bloques=bloques, hoy=hoy, Permission=Permission, titulo='Medicion')
 
 @app.route('/getcamas', methods=['POST'])
-@login_required
+#@login_required
 def get_camas():
     req = request.json
     print('REQ',req)
@@ -225,7 +234,7 @@ def get_camas():
     return camas
 
 @app.route('/getvariedad', methods=['POST'])
-@login_required
+#@login_required
 def get_variedad():
     req = request.json
     print('REQ',req)
@@ -240,7 +249,7 @@ def get_variedad():
     return variedad
 
 @app.route('/procesarform1', methods=['POST'])
-@login_required
+#@login_required
 def procesarform1():
     #if isinstance(request.form.get("fechamed"), str):
     #    fecha_med = datetime.strptime(request.form.get("fechamed"), "%Y-%m-%d").date()
@@ -275,11 +284,11 @@ def procesarform1():
             print(session['datos1'])
             return redirect(url_for('medicionform2'))
         else:
-            flash('Ya existe una medición realizada en esa fecha', 'danger')
+            flash('Ya existe una medición realizada con los parámetros ingresados. Por favor revise la fecha y/ número de muestreo', 'danger')
             return redirect(url_for('medicionform1'))
 
 @app.route("/medicionform2")
-@login_required
+#@login_required
 def medicionform2():
     if session.get('datos1') == None:
         return redirect(url_for('medicionform1'))
@@ -290,7 +299,7 @@ def medicionform2():
     return render_template('ingreso_datos.html',fecha=fecha, titulo='Medicion')
 
 @app.route("/ingresar_datos", methods=['GET', 'POST'])
-@login_required
+#@login_required
 def ingresar_datos():
     if request.method == 'POST':
         d12 = request.form.get("cec") if request.form.get("cec") else None
@@ -312,21 +321,21 @@ def ingresar_datos():
                         prolent=datosf1['prom_lenteja'],cant_pintcolor=datosf1['pcolor'], pro_pintcolor=datosf1['prom_pcolor'],
                         cant_raycolor=datosf1['rcolor'], pro_raycolor=datosf1['prom_rcolor'], cant_colordef=datosf1['colord'],
                         pro_colordef=datosf1['prom_colord'],muestreo=datosf1['muestreo'],ce_compost=d12,ph_compost=d13,de_compost=d14,
-                        ce_tanque=d15,ph_tanque=d16,ce_goteo=d17,ph_goteo=d18,ce_programac=d21,ph_programac=d22,cama_id=datosf1['cama_id'])
+                        ce_tanque=d15,ph_tanque=d16,ce_goteo=d17,ph_goteo=d18,ce_programac=d21,ph_programac=d22,cama_id=datosf1['cama_id'], usuario_id=session.get('user_id'))
         db.session.add(medicion)
         db.session.commit()
         count_med = db.session.query(Medicion).count()
-        session.pop('datos1', None)
         if count_med <= 10:
             flash('La medicion fue guardada exitosamente. Por favor ingrese %2d mediciones más para obtener una recomendacion'%(11-count_med),'success')
             return redirect(url_for('medicionform1'))
         else:
+            session.pop('datos1', None)
             session['id_med'] = medicion.id
             return redirect(url_for('get_recomendacion'))
     return render_template('ingreso_datos.html', titulo='Medicion')
 
 @app.route("/get_recomendacion")
-@login_required
+#@login_required
 def get_recomendacion():
     ph = db.session.query(Medicion.ph).all();
     ph = pd.DataFrame(ph, columns=['Name'])
@@ -423,7 +432,7 @@ def get_recomendacion():
 
 
 @app.route("/guardar_recomendacion", methods=['GET', 'POST'])
-@login_required
+#@login_required
 def guardar_recomendacion():
     if request.method=='POST':
         descrip = request.form.get("descrip")
@@ -511,6 +520,7 @@ def print_reporte_medicion():
                 r.append(item.pro_raycolor)
                 r.append(item.cant_colordef)
                 r.append(item.pro_colordef)
+                r.append(item.medusuario.nombre + ' ' + item.medusuario.apellido)
                 results.append(r)
             print('Results', results)
             m2e = MedicionesToExcel(results)
@@ -523,7 +533,7 @@ def print_reporte_medicion():
         return send_file(file_stream, attachment_filename="Mediciones.xls", as_attachment=True)
 
 @app.route('/historial', methods=['GET', 'POST'])
-@login_required
+#@login_required
 def buscar_recomendaciones():
 
     if session.get('busqueda_recomendaciones'):
@@ -545,7 +555,9 @@ def buscar_recomendaciones():
                 r['recomendacion'] = row.descrip
                 r['de_acuerdo'] = row.de_acuerdo
                 print('TIPO',type(row.otra_sugerencia))
-                if row.otra_sugerencia == 0:
+                if row.otra_sugerencia is None:
+                    s = '-'
+                elif row.otra_sugerencia == 0:
                     s = alternativas_todict()[Alternativas.A0]
                 elif row.otra_sugerencia == 1:
                     s = alternativas_todict()[Alternativas.A1]
@@ -557,6 +569,7 @@ def buscar_recomendaciones():
                     s = alternativas_todict()[Alternativas.A4]
                 r['otra_sugerencia'] = s
                 r['fecha'] = row.medicion.fecha
+                r['usuario'] = row.medicion.medusuario.nombre + ' ' + row.medicion.medusuario.apellido
                 results.append(r)
             print('RECos',results)
             session['busqueda_recomendaciones'] = results
@@ -567,7 +580,7 @@ def buscar_recomendaciones():
     return render_template('historial_recomendaciones.html', recs=results, titulo='Historial Recomendaciones')
 
 @app.route('/imprimir')
-@login_required
+#@login_required
 def imprimir_reporte():
     if session.get('busqueda_recomendaciones'):
         document = PDF(format='A4',orientation='L')
@@ -586,11 +599,12 @@ def imprimir_reporte():
         document.cell(col_width_cab / 2, th, "{}".format(session.get('fecha_fin')), border=0)
         document.ln(2 * th)
         col_width_tab = document.page_width
-        document.cell((col_width_tab*7)/100, th, 'N°', border=1)
-        document.cell((col_width_tab*35)/100, th, 'Descripción', border=1)
+        document.cell((col_width_tab*5)/100, th, 'N°', border=1)
+        document.cell((col_width_tab*30)/100, th, 'Descripción', border=1)
         document.cell((col_width_tab*10)/100, th, 'De Acuerdo', border=1)
-        document.cell((col_width_tab*34)/100, th, 'Sugerencia', border=1)
+        document.cell((col_width_tab*29)/100, th, 'Sugerencia', border=1)
         document.cell((col_width_tab*14)/100, th, 'Fecha', border=1)
+        document.cell((col_width_tab*12) / 100, th, 'Usuario', border=1)
         document.ln(th)
         document.set_font('helvetica', '', 12)
         recos = session.get('busqueda_recomendaciones')
@@ -599,19 +613,20 @@ def imprimir_reporte():
         for i in recos:
             #top = document.y
             #offset = document.x + ((col_width_tab * 33) / 100)
-            document.cell((col_width_tab*7)/100, 2*th, str(i['n']),1)
+            document.cell((col_width_tab*5)/100, 2*th, str(i['n']),1)
             #document.y = top
             #document.x = offset
-            document.cell((col_width_tab*37)/100, 2*th, i['recomendacion'],1)
+            document.cell((col_width_tab*30)/100, 2*th, i['recomendacion'],1)
             # top2 = document.y
             #offset2 = document.x + ((col_width_tab * 14) / 100)
             document.cell((col_width_tab*10)/100, 2*th, i['de_acuerdo'],1)
             # document.y = top2
             #document.x = offset2
-            document.cell((col_width_tab*36)/100, 2*th, i['otra_sugerencia'], 1)
+            document.cell((col_width_tab*29)/100, 2*th, i['otra_sugerencia'], 1)
             # top3= document.y
             #offset3 = document.x + ((col_width_tab * 13) / 100)
-            document.cell((col_width_tab*10)/100, 2*th,i['fecha'],1)
+            document.cell((col_width_tab*14)/100, 2*th,i['fecha'],1)
+            document.cell((col_width_tab * 12) / 100, 2 * th, i['usuario'], 1)
             # document.y = top3
             #document.x = offset3
             document.ln(2*th)

@@ -29,7 +29,8 @@
                 <th scope="col">Recomendación</th>
                 <th scope="col">De acuerdo</th>
                 <th scope="col">Sugerencia</th>
-              <th scope="col">Fecha</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Usuario</th>
             </tr>
               </thead>
               <tbody>
@@ -40,6 +41,7 @@
                     <td>{{ r['de_acuerdo'] }}</td>
                     <td>{{ r['otra_sugerencia'] }}</td>
                     <td>{{ r['fecha'] }}</td>
+                    <td>{{ r['usuario'] }}</td>
                 </tr>
               {% endfor %}
               </tbody>

@@ -29,7 +29,7 @@
                 </div>
                 <div class="form-group">
                     <label for="otra_sugerencia">Seleccione una opcion más adecuada</label>
-                      <select class="form-control" name="otra_sugerencia" id="otra_sugerencia" required>
+                      <select class="form-control" name="otra_sugerencia" id="otra_sugerencia">
                         <option selected disabled value="">Seleccionar...</option>
                           {% for v in alt %}
                             <option value="{{ v.value }}">{{ alt[v] }}</option>
