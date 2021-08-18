@@ -38,8 +38,8 @@ def ayuda():
     return render_template('help.html', titulo='Ayuda')
 
 @app.route('/nuevo', methods=['GET', 'POST'])
-#@login_required
-#@admin_required
+@login_required
+@admin_required
 def crear_usuario():
     roles = db.session.query(Rol).all();
     if request.method == 'POST':
@@ -64,15 +64,15 @@ def crear_usuario():
     return render_template('crear_usuario.html',roles=roles, titulo='Usuarios - Nuevo')
 
 @app.route('/usuarios',methods=['GET','POST'])
-#@login_required
-#@admin_required
+@login_required
+@admin_required
 def ver_usuarios():
     users = db.session.query(Usuario).join(Rol).all()
     return render_template('usuarios.html', users=users, titulo='Usuarios')
 
 @app.route('/editar<id>',methods=['GET','POST'])
-#@login_required
-#@admin_required
+@login_required
+@admin_required
 def editar_usuario(id):
     user = Usuario.query.filter_by(id=id).first()
     roles = db.session.query(Rol).all()
@@ -213,14 +213,14 @@ def reset_token(token):
 #     db.session.commit()
 
 @app.route('/medicionform1')
-#@login_required
+@login_required
 def medicionform1():
     bloques = db.session.query(Bloque).all();
     hoy = date.today()
     return render_template("parcela.html",bloques=bloques, hoy=hoy, Permission=Permission, titulo='Medicion')
 
 @app.route('/getcamas', methods=['POST'])
-#@login_required
+@login_required
 def get_camas():
     req = request.json
     print('REQ',req)
@@ -234,7 +234,7 @@ def get_camas():
     return camas
 
 @app.route('/getvariedad', methods=['POST'])
-#@login_required
+@login_required
 def get_variedad():
     req = request.json
     print('REQ',req)
@@ -249,7 +249,7 @@ def get_variedad():
     return variedad
 
 @app.route('/procesarform1', methods=['POST'])
-#@login_required
+@login_required
 def procesarform1():
     #if isinstance(request.form.get("fechamed"), str):
     #    fecha_med = datetime.strptime(request.form.get("fechamed"), "%Y-%m-%d").date()
@@ -288,7 +288,7 @@ def procesarform1():
             return redirect(url_for('medicionform1'))
 
 @app.route("/medicionform2")
-#@login_required
+@login_required
 def medicionform2():
     if session.get('datos1') == None:
         return redirect(url_for('medicionform1'))
@@ -299,7 +299,7 @@ def medicionform2():
     return render_template('ingreso_datos.html',fecha=fecha, titulo='Medicion')
 
 @app.route("/ingresar_datos", methods=['GET', 'POST'])
-#@login_required
+@login_required
 def ingresar_datos():
     if request.method == 'POST':
         d12 = request.form.get("cec") if request.form.get("cec") else None
@@ -335,7 +335,7 @@ def ingresar_datos():
     return render_template('ingreso_datos.html', titulo='Medicion')
 
 @app.route("/get_recomendacion")
-#@login_required
+@login_required
 def get_recomendacion():
     ph = db.session.query(Medicion.ph).all();
     ph = pd.DataFrame(ph, columns=['Name'])
@@ -432,7 +432,7 @@ def get_recomendacion():
 
 
 @app.route("/guardar_recomendacion", methods=['GET', 'POST'])
-#@login_required
+@login_required
 def guardar_recomendacion():
     if request.method=='POST':
         descrip = request.form.get("descrip")
@@ -533,7 +533,7 @@ def print_reporte_medicion():
         return send_file(file_stream, attachment_filename="Mediciones.xls", as_attachment=True)
 
 @app.route('/historial', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def buscar_recomendaciones():
 
     if session.get('busqueda_recomendaciones'):
@@ -580,7 +580,7 @@ def buscar_recomendaciones():
     return render_template('historial_recomendaciones.html', recs=results, titulo='Historial Recomendaciones')
 
 @app.route('/imprimir')
-#@login_required
+@login_required
 def imprimir_reporte():
     if session.get('busqueda_recomendaciones'):
         document = PDF(format='A4',orientation='L')
