@@ -1,22 +1,21 @@
 from datetime import date, datetime
+from datetime import timedelta
 from io import BytesIO
-
-from flask import render_template, url_for, flash, redirect, request, Response, session, jsonify, current_app, send_file
-from flask_login import current_user, login_user, logout_user, login_required
-from sqlalchemy import and_, or_
-from sqlalchemy.orm import load_only
-
-from app import app, db, bcrypt, mail
-from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission, Alternativas
-from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel, alternativas_todict
 from json import dumps
-import keras
+
 import numpy as np
 import pandas as pd
+from flask import render_template, url_for, flash, redirect, request, Response, session, send_file
+from flask_login import current_user, login_user, logout_user, login_required
 from keras.models import model_from_json
 from numpy import array
-from app.utils import permission_required, admin_required
-from datetime import timedelta
+from sqlalchemy import and_, or_
+
+from app import app, db, bcrypt
+from app.models import Usuario, Rol, Bloque, Medicion, Variedad, Cama, Recomendacion, Permission, Alternativas
+from app.utils import admin_required
+from app.utils import send_reset_email, serialize, PDF, MedicionesToExcel, alternativas_todict
+
 
 @app.context_processor
 def inject_permissions():
