@@ -32,7 +32,6 @@ dependencies:
   - grpcio=1.36.1
   - h5py=2.10.0
   - hdf5=1.10.4
-  - icc_rt=2019.0.0
   - idna=2.10
   - intel-openmp=2021.3.0
   - itsdangerous=2.0.1
@@ -65,7 +64,6 @@ dependencies:
   - pycparser=2.20
   - pygpu=0.7.6
   - pyopenssl=20.0.1
-  - pyreadline=2.1
   - pysocks=1.7.1
   - python=3.7.11
   - python-dateutil=2.8.2
@@ -85,12 +83,8 @@ dependencies:
   - typing-extensions=3.10.0.0
   - typing_extensions=3.10.0.0
   - urllib3=1.26.6
-  - vc=14.2
-  - vs2015_runtime=14.27.29016
   - werkzeug=1.0.1
   - wheel=0.36.2
-  - win_inet_pton=1.1.0
-  - wincertstore=0.2
   - wrapt=1.12.1
   - xlwt=1.3.0
   - xz=5.2.5
@@ -111,4 +105,10 @@ dependencies:
     - pdfkit==0.6.1
     - speaklater==1.3
     - sqlalchemy==1.4.18
+    - vc==14.2
+    - wincertstore==0.2
+    - pyreadline==2.1
+    - icc_rt==2019.0.0
+    - win_inet_pton==1.1.0
+    - vs2015_runtime==14.27.29016
 prefix: C:\Users\Diego\miniconda3\envs\asistente_floricola
