@@ -8,15 +8,15 @@
 	<form method="post" align="center" action="{{ url_for('crear_usuario') }}">
 					<div class="form-group">
 						<label for="nombre">Nombre</label>
-						<input type="text" name="nombre" class="form-control" id="nombre">
+						<input type="text" name="nombre" class="form-control" id="nombre" required>
 					</div>
 					<div class="form-group">
 						<label for="ape">Apellido</label>
-						<input type="text" name="ape" class="form-control" id="ape">
+						<input type="text" name="ape" class="form-control" id="ape" required>
 					</div>
 					<div class="form-group">
 						<label for="email">Email</label>
-						<input type="email" name="email" class="form-control" id="email">
+						<input type="email" name="email" class="form-control" id="email" required>
 					</div>
 					 <div class="form-group">
 						 <label for="password">Contraseña</label>

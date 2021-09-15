@@ -10874,3 +10874,22 @@ body.sb-sidenav-toggled #wrapper #sidebar-wrapper {
     margin-left: -15rem;
   }
 }
+#sustrato {
+  background-color: #4fc0e8;
+}
+
+#compost {
+  background-color: #9f923b;
+}
+
+#tanque {
+  background-color: #b5c4cd;
+}
+
+#goteo {
+  background-color: #48cfae;
+}
+
+#prog {
+  background-color: #bfb68d;
+}

@@ -106,6 +106,23 @@ def eliminar_usuario(id):
         flash('Usuario eliminado','success')
     return redirect(url_for('ver_usuarios'))
 
+@app.route('/nuevobloque', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def crear_bloque():
+    if request.method == 'POST':
+        num_bloque = request.form.get("num_bloque")
+        buscar_bloque = Bloque.query.filter_by(num_bloque=num_bloque).first()
+        if buscar_bloque:
+            flash('Ya existe ese número de bloque', 'warning')
+        else:
+             bloque = Bloque(num_bloque=num_bloque)
+             db.session.add(bloque)
+             db.session.commit()
+             flash('Bloque creado exitosamente','success')
+             return redirect(url_for('ver_bloques'))
+    return render_template('crear_usuario.html', titulo='Bloque - Nuevo')
+
 @app.route("/", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -182,6 +199,7 @@ def reset_token(token):
 #         admin_view=admin.index_view,
 #         get_url=url_for
 #     )
+
 
 
 # @app.before_first_request
